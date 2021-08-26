@@ -24,7 +24,7 @@ import io
 #use uma das 3 opcoes para atribuir à variável a porta usada
 #serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-serialName = "COM3"                  # Windows(variacao de)
+serialName = "COM4"                  # Windows(variacao de)
 
 
 def main():
@@ -43,7 +43,7 @@ def main():
         #seus dados a serem transmitidos são uma lista de bytes a serem transmitidos. Gere esta lista com o
         #nome de txBuffer. Esla sempre irá armazenar os dados a serem enviados.
         
-        with open('.\loss.bmp', "rb") as image:
+        with open('./loss.bmp', "rb") as image:
             image = image.read()
             txBuffer = image
 
