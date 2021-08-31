@@ -16,6 +16,7 @@ import numpy as np
 from PIL import Image
 import io
 import random
+import struct
 
 # voce deverá descomentar e configurar a porta com através da qual ira fazer comunicaçao
 #   para saber a sua porta, execute no terminal :
@@ -25,28 +26,26 @@ import random
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-serialName = "COM4"                  # Windows(variacao de)
-
+#serialName = "COM4"                  # Windows(variacao de)
 def generateRandomBytes():
     commandList = [b'\x00', b'\x0F', b'\xF0', b'\xFF', b'\x00\xFF', b'\xFF\x00']
-    byteList = []
-    byteString = b''
+    byteList = b''
     i = 0
     sizeList = random.randint(10,30)
-    print(f"Tamanho da lista: {sizeList}")
+    numberCommands = struct.pack('B', sizeList)
     while(i < sizeList):
-        byteList.append(random.choice(commandList))
+        randIndex = random.randint(0,5)
+        if len(commandList[randIndex]) == 2:
+            byteList += b'\x11'
+        byteList += commandList[randIndex]
         i +=1
-
-    for i in byteList:
-        byteString += i
-    return byteString      
+    byteSize = len(byteList)
+    return byteList, byteSize, numberCommands      
 
 def main():
     sending = True
-    txBuffer = generateRandomBytes()
-    bufferLen = len(txBuffer)
-
+    receive = False
+    txBuffer, bufferLen, nCommands = generateRandomBytes()
     while sending:
         try:
             #declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
@@ -57,16 +56,17 @@ def main():
             # Ativa comunicacao. Inicia os threads e a comunicação seiral
             com1.enable()
             print('Comunication established. \nPort Open...')
-
-            print("\nEnviando Tamanho da mensagem: {}".format(bufferLen))
-            byteLen = (bufferLen).to_bytes(1,byteorder="big")
-            arrayLen = b'' + byteLen
-            com1.sendData(arrayLen)
+            while not receive:
+                print("\nComencing Transmission:...\nsending {}".format(bufferLen))
+                com1.sendData(np.asarray(bufferLen))
+                rxBuffer, nRx = com1.getData(1)
+                print('\nReceiving Transmission:...\nreceiving {}'.format(rxBuffer))
+                if rxBuffer == b'\x45':
+                    receive = True
 
             print("\nComencing Transmission:...\nsending {}".format(txBuffer))
 
-            print(type(txBuffer))
-            com1.sendData(np.asarray(txBuffer))
+            com1.sendData(txBuffer)
 
             # Encerra comunicação
             print("-------------------------")
