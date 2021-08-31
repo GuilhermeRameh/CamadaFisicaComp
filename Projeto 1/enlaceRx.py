@@ -64,6 +64,7 @@ class RX(object):
         self.threadPause()
         b           = self.buffer[0:nData]
         self.buffer = self.buffer[nData:]
+        print('Buffer: {}'.format(b))
         self.threadResume()
         return(b)
 

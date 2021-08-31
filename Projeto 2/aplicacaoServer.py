@@ -33,55 +33,76 @@ def main():
         #para declarar esse objeto é o nome da porta.
         com1 = enlace(serialName)
 
-
         # Ativa comunicacao. Inicia os threads e a comunicação seiral
         com1.enable()
-        print('Comunicação estabelecida. \nPort Open...')
-        #Se chegamos até aqui, a comunicação foi aberta com sucesso. Faça um print para informar.
-
-        '''
-        PRIMEIRA ETAPA:
-        recebendo a array de bytes que contém o tamanho da 
-        próxima array de comandos. 
-        '''
-
-        print("Receiving...")
-        receiving = True
-        printTest = True
-
-        while receiving:
-            rxBuffer, nRx = com1.getData(1)
-            if nRx != None and printTest:
-                print("Comunicação estabelecida, aguarde o recebimento de Dados :)")
-                printTest = False
-            receiving = False
         
-        #Agora temos que converter o byte do tamanho para um int
-        receptionSize = int.from_bytes(rxBuffer, "big")
+        com1.fisica.flush()
+
+        txBuffer = b''
+
+        lista = [b'\xff', b'\xee', b'\xdd', b'\xcc\xbb']
+        for i in lista:
+            txBuffer += i
+
+
+        com1.sendData(np.asarray(txBuffer))
+
+        # txLen = len(txBuffer)
+        # print(txLen)
+
+        # print("recebendo...")
+
+        # rxBuffer, nRx = com1.getData(1)
+
+        # print('rxBuffer: {}'.format(rxBuffer))
+
+        # print('nRx:{}'.format(nRx))
+
+
+        # print('Comunicação estabelecida. \nPort Open...')
+        # #Se chegamos até aqui, a comunicação foi aberta com sucesso. Faça um print para informar.
+
+        # '''
+        # PRIMEIRA ETAPA:
+        # recebendo a array de bytes que contém o tamanho da 
+        # próxima array de comandos. 
+        # '''
+
+        # print("Receiving...")
+        # receiving = True
+        # printTest = True
+
+        # while receiving:
+        #     rxBuffer, nRx = com1.getData(1)
+        #     if nRx != None and printTest:
+        #         print("Comunicação estabelecida, aguarde o recebimento de Dados :)")
+        #         printTest = False
+        #     receiving = False
         
-        print("Número do buffer: {}".format(nRx))
-        print("Tamanho da array dos comandos: {}".format(receptionSize))
-
-        '''
-        Agora podemos nos preparar para receber 
-        o array de comandos
-        '''
+        # #Agora temos que converter o byte do tamanho para um int
+        # receptionSize = int.from_bytes(rxBuffer, "big")
         
-        print("\nRecebendo a array de Comandos...")
-        receiving = True
-        printTest = True
+        # print("Número do buffer: {}".format(nRx))
+        # print("Tamanho da array dos comandos: {}".format(receptionSize))
 
-        while receiving:
-            rxBuffer, nRx = com1.getData(receptionSize)
-            if nRx != None and printTest:
-                print("\nComunicação estabelecida, aguarde o recebimento dos COMANDOS \o-o/ \n")
-                printTest = False
-            receiving = False
-
-        print("Número do buffer: {}".format(nRx))
-        print("Array de Comandos: {}".format(rxBuffer))
-
+        # '''
+        # Agora podemos nos preparar para receber 
+        # o array de comandos
+        # '''
         
+        # print("\nRecebendo a array de Comandos...")
+        # receiving = True
+        # printTest = True
+
+        # while receiving:
+        #     rxBuffer, nRx = com1.getData(receptionSize)
+        #     if nRx != None and printTest:
+        #         print("\nComunicação estabelecida, aguarde o recebimento dos COMANDOS \o-o/ \n")
+        #         printTest = False
+        #     receiving = False
+
+        # print("Número do buffer: {}".format(nRx))
+        # print("Array de Comandos: {}".format(rxBuffer))
 
         com1.disable()
 
