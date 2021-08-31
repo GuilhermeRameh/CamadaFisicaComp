@@ -26,7 +26,8 @@ import struct
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-#serialName = "COM4"                  # Windows(variacao de)
+serialName = "COM4"                  # Windows(variacao de)
+
 def generateRandomBytes():
     commandList = [b'\x00', b'\x0F', b'\xF0', b'\xFF', b'\x00\xFF', b'\xFF\x00']
     byteList = b''

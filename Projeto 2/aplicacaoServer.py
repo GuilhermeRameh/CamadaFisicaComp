@@ -89,7 +89,37 @@ def main():
             receiving = False
 
         print("Número do buffer: {}".format(nRx))
-        print("Array de Comandos: {}".format(rxBuffer))
+        print("Array de Comandos RAW: {}".format(rxBuffer))
+
+        print('\nConverting...')
+        
+        comandoDuplo = b''
+        arrayComandos = []
+        comando2Byte = False
+
+        for i in rxBuffer:
+                
+            byte = i.to_bytes(1, byteorder='big')
+
+            if byte == b'\x11':
+                comando2Byte = True
+                continue
+
+            if comando2Byte:
+                comandoDuplo += byte
+                if len(comandoDuplo) == 2:
+                    arrayComandos.append(comandoDuplo)
+                    comando2Byte = False
+                    comandoDuplo = b''
+            
+            else:
+                arrayComandos.append(byte)
+            
+            
+        arrayLength = len(arrayComandos)
+        
+        print("Array de Comandos Convertida: {}".format(arrayComandos))
+        print(f"Tamanho real da Array: {arrayLength}")
 
         com1.disable()
 
