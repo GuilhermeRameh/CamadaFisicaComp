@@ -23,24 +23,30 @@ import random
 # se estiver usando windows, o gerenciador de dispositivos informa a porta
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
-serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
+# serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-#serialName = "COM4"                  # Windows(variacao de)
+serialName = "COM4"                  # Windows(variacao de)
 
 def generateRandomBytes():
     commandList = [b'\x00', b'\x0F', b'\xF0', b'\xFF', b'\x00\xFF', b'\xFF\x00']
     byteList = []
+    byteString = b''
     i = 0
     sizeList = random.randint(10,30)
+    print(f"Tamanho da lista: {sizeList}")
     while(i < sizeList):
         byteList.append(random.choice(commandList))
         i +=1
-    return byteList      
+
+    for i in byteList:
+        byteString += i
+    return byteString      
 
 def main():
     sending = True
     txBuffer = generateRandomBytes()
     bufferLen = len(txBuffer)
+
     while sending:
         try:
             #declaramos um objeto do tipo enlace com o nome "com". Essa é a camada inferior à aplicação. Observe que um parametro
@@ -52,9 +58,10 @@ def main():
             com1.enable()
             print('Comunication established. \nPort Open...')
 
-            print("\n Enviando Tamanho da mensagem: {}".format(bufferLen))
+            print("\nEnviando Tamanho da mensagem: {}".format(bufferLen))
             byteLen = (bufferLen).to_bytes(1,byteorder="big")
-            com1.sendData(byteLen)
+            arrayLen = b'' + byteLen
+            com1.sendData(arrayLen)
 
             print("\nComencing Transmission:...\nsending {}".format(txBuffer))
 
