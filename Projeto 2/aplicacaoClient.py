@@ -32,6 +32,7 @@ def generateRandomBytes():
     byteList = b''
     i = 0
     sizeList = random.randint(10,30)
+    print(sizeList)
     numberCommands = struct.pack('B', sizeList)
     while(i < sizeList):
         randIndex = random.randint(0,5)
@@ -68,12 +69,23 @@ def main():
 
             com1.sendData(txBuffer)
 
-            # Encerra comunicação
-            print("-------------------------")
-            print("Comunicação encerrada")
-            print("-------------------------")
-            com1.disable() 
-            sending = False
+            while receive:
+                com1.rx.clearBuffer()
+                rxBuffer, nRx = com1.getData(1)
+                print("\nAwaiting response:...\nreceiving {}".format(rxBuffer))
+                if rxBuffer == nCommands:
+                    com1.sendData(b'\x35')
+                    print("\nTamanho recebido correto")
+                    # Encerra comunicação
+                    print("-------------------------")
+                    print("Comunicação encerrada")
+                    print("-------------------------")
+                    com1.disable() 
+                    sending = False
+                    receive = False
+                else:
+                    print("\nMensagem enviada errada\nIniciando novo envio")
+                    receive = False
 
         except Exception as erro:
             print("ops! :-\\")
