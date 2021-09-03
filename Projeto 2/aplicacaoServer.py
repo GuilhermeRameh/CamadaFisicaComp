@@ -123,9 +123,6 @@ def main():
             print("Array de Comandos Convertida: {}".format(arrayComandos))
             print(f"Tamanho real da Array: {arrayLength}")
 
-
-            # To-Do: terminar o reenvio do número de comandos para a confirmação com
-            # o client.
             com1.sendData(arrayLength.to_bytes(1, byteorder='big'))
 
 
