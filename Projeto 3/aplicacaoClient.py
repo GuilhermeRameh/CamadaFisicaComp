@@ -29,16 +29,23 @@ def main():
 
     while main:
         try:
-            
+
+            dataHead = [b'', b'', b'', b'', b'', b'', b'', b'', b'', b'']
+
+            packages = [b'\xab'*114, b'\x12\xb0']
+            protocolo.sendingLoop(, packages)
             print('')
+
+
             # To-Do: fazer o loop principal da aplicação
+            main = False
             
 
         except Exception as erro:
             print("ops! :-\\")
             print(erro)
             protocolo.com1.disable()
-
+            main = False
 
     #so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
 if __name__ == "__main__":
