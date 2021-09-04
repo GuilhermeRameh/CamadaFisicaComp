@@ -19,7 +19,7 @@ from fileManager import *
 from Protocolo import *
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
-serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
+serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 # serialName = "COM4"                  # Windows(variacao de)
 
@@ -27,23 +27,18 @@ serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 def main():
     main = True
     protocolo = Protocolo(serialName)
+    retorno = []
 
     while main:
         try:
+            
+            protocolo.receiveHandShake()
 
-            fm = FileManager('test.txt')
-
-            protocolo.sendHandshake()
             print('oi')
-
-
-            packages = fm.dividePackages()
-            formato = fm.returnExtension()
-
-            protocolo.sendingLoop(packages, formato)
-            print('Transmissão encerrada')
-
-            # To-Do: fazer o loop principal da aplicação CLIENT
+            
+            retorno = protocolo.receivingLoop()
+            print("Acabou recebimento\nO que recebi foi: \n{}".format(retorno))
+            # To-Do: fazer o loop principal da aplicação SERVER
             main = False
             
 

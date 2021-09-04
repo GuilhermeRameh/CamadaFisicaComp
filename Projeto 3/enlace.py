@@ -41,4 +41,7 @@ class enlace(object):
         
     def getData(self, size):
         data = self.rx.getNData(size)
+        print(data)
+        if data == b'\x00':
+            return (data, 0)
         return(data, len(data))
