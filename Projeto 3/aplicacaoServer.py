@@ -26,25 +26,17 @@ from Protocolo import *
 
 def main():
     main = True
-    protocolo = Protocolo("COM4")
+    protocolo = Protocolo("COM3")
 
     while main:
         try:
+            
+            protocolo.receiveHandShake()
 
-            fm = FileManager('test.txt')
-
-            packages = fm.dividePackages()
-            formato = fm.returnExtension()
-
-            protocolo.sendHandshake()
             print('oi')
+            
 
-            protocolo.sendingLoop(packages, formato)
-            print('')
-
-            protocolo.receivingLoop()
-
-            # To-Do: fazer o loop principal da aplicação CLIENT
+            # To-Do: fazer o loop principal da aplicação SERVER
             main = False
             
 
