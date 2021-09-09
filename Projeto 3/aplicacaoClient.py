@@ -23,7 +23,6 @@ serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
 # serialName = "COM4"                  # Windows(variacao de)
 
-
 def main():
     main = True
     protocolo = Protocolo(serialName)
@@ -36,9 +35,8 @@ def main():
             protocolo.sendHandshake()
 
             packages = fm.dividePackages()
-            formato = fm.returnExtension()
 
-            protocolo.sendingLoop(packages, formato)
+            protocolo.sendingLoop(packages)
             print('Transmissão encerrada')
 
             # To-Do: fazer o loop principal da aplicação CLIENT

@@ -38,6 +38,7 @@ def main():
             
             retorno = protocolo.receivingLoop()
             print("Acabou recebimento\nO que recebi foi: \n{}".format(retorno))
+            protocolo.reconstructMessage()
             # To-Do: fazer o loop principal da aplicação SERVER
             main = False
             
