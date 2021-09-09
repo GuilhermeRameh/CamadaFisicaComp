@@ -4,6 +4,8 @@
 #
 #######################################
 
+import os
+from pathlib import Path
 from enlace import *
 import numpy as np
 import struct
@@ -27,6 +29,8 @@ class Protocolo:
         self.endBit = b'\x01'
 
         self.eop = b'\xba\xba\xb0\xe1'
+
+        self.fileNumber = 1
 
    # Note to self: a função que abre, le e fragmenta (monta os pacotes)
    # vai ser feito pelo Bernardo. Por enquanto posso assumit que vou trabalhar 
@@ -132,9 +136,17 @@ class Protocolo:
         self.com1.sendData(receivedShake)
 
     def reconstructMessage(self):
+        curPath = Path(__file__).parent.resolve()
         filepath = self.receivedArray[0].decode('utf-8')
+        filepath = str(curPath) + '/' + filepath
         del self.receivedArray[0]
-        newFile = open("text2.txt", 'wb')
+        if os.path.exists(filepath):
+            fileNum = str(self.fileNumber)
+            fileNum += "."
+            filepath = filepath.replace(".", fileNum)
+            self.fileNumber += 1
+        print(f'o novo arquivo será encontrado em: {filepath}')
+        newFile = open(filepath, 'wb')
         for content in self.receivedArray:
             newFile.write(content)
         newFile.close()
