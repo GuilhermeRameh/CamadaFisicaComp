@@ -86,11 +86,10 @@ class Protocolo:
             payloadId = bufferHead[0].to_bytes(1,'big')
             payloadSize = bufferHead[1]
             nPacotes = bufferHead[2:4]
-            if (b'\x00'+payloadId) == nPacotes:
-                print("\n\n\nrecebi todos os pacotes")
-                receiving = False
-            print(f'\n\nQuantidade de Pacotes: {nPacotes}\n')
-            print("\n\nGetting Payload Data...")
+            
+            print(f'Quantidade de Pacotes: {int.from_bytes(nPacotes, "big")}')
+            print(f'ID do Pacote: {bufferHead[0]}')
+            print("\nGetting Payload Data...")
             bufferPayload, payloadBufferSize = self.com1.getData(payloadSize)
 
             #To-Do: Implementar uma função de timeoout
@@ -105,7 +104,12 @@ class Protocolo:
                 self.receivedArray.append(bufferPayload)
                 contBuffer = self.constructDatagram(payloadId, b'\x42', b'', continueBit=self.contBit)
                 self.com1.sendData(contBuffer)
-            previousId = payloadId
+            previousId = payloadId 
+
+            if (b'\x00'+payloadId) == nPacotes:
+                print("\n\n\nRecebi todos os pacotes")
+                receiving = False
+
         print('\n\nenviando mensagem de fim')
         endBuffer = self.constructDatagram(b'\x00', b'\x42', b'', endBit=self.endBit)
         self.com1.sendData(endBuffer)
@@ -140,12 +144,23 @@ class Protocolo:
         filepath = self.receivedArray[0].decode('utf-8')
         filepath = str(curPath) + '/' + filepath
         del self.receivedArray[0]
-        if os.path.exists(filepath):
-            fileNum = str(self.fileNumber)
-            fileNum += "."
-            filepath = filepath.replace(".", fileNum)
-            self.fileNumber += 1
-        print(f'o novo arquivo será encontrado em: {filepath}')
+        verify = True
+        while verify:
+            if os.path.exists(filepath):
+                fileNum = str(self.fileNumber)
+                fileNum = "("+fileNum+")."
+                if self.fileNumber > 1:
+                    filepath = filepath.replace("("+str(self.fileNumber - 1)+").", fileNum)
+                    self.fileNumber += 1
+                else:
+                    filepath = filepath.replace(".", fileNum)
+                    self.fileNumber += 1
+
+
+                
+            else:
+                verify = False
+        print(f'O novo arquivo será encontrado em: {filepath}')
         newFile = open(filepath, 'wb')
         for content in self.receivedArray:
             newFile.write(content)
