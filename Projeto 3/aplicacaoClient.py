@@ -34,8 +34,6 @@ def main():
             fm = FileManager('test.txt')
 
             protocolo.sendHandshake()
-            print('oi')
-
 
             packages = fm.dividePackages()
             formato = fm.returnExtension()
