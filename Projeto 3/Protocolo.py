@@ -31,6 +31,7 @@ class Protocolo:
         self.eop = b'\xba\xba\xb0\xe1'
 
         self.fileNumber = 1
+        self.erro = True
 
    # Note to self: a função que abre, le e fragmenta (monta os pacotes)
    # vai ser feito pelo Bernardo. Por enquanto posso assumit que vou trabalhar 
@@ -51,13 +52,17 @@ class Protocolo:
         pkgTotalSize = (len(packages)-1).to_bytes(2, 'big')
         receiverId = b'\x69'
         endStatus = b'\x00'
-        print(f"\n\nTotal de pacotes a serem enviados {len(packages)}")
+        print(f"Total de pacotes a serem enviados {len(packages)}")
         for i in range(len(packages)):
             if endStatus == self.endBit:
                 break
             while True:
+                print(f"\nIniciando envio do pacote de ID {i}")
                 package = bytes(packages[i])
                 idPacote = struct.pack('B', i)
+                if i ==1 and self.erro:
+                    idPacote = struct.pack('B', 0)
+                    self.erro = False
                 pkgSize = struct.pack('B', len(package))
 
                 txBuffer = self.constructDatagram(idPacote, receiverId, package, pkgSize=pkgSize, pkgTotalSize=pkgTotalSize)          
@@ -70,9 +75,12 @@ class Protocolo:
                 contStatus = responseBuffer[6].to_bytes(1, 'big')
                 endStatus = responseBuffer[7].to_bytes(1, 'big')
                 if contStatus == self.contBit and repeatStatus != self.resendBit:
+                    print("Nada de errado na transmição enviando próximo pacote.")
                     break
+                else:
+                    print(f"Algo deu errado reiniciando envio do pacote de ID {i}")
         self.com1.disable()
-        print("\n\nLoop de Envio concluído com sucesso!")
+        print("\n\n\nLoop de Envio concluído com sucesso!")
 
     def receivingLoop(self):
         receiving = True
