@@ -7,18 +7,12 @@
 import os
 from pathlib import Path
 import time
-from enlace import *
 import numpy as np
 import struct
-from fileManager import *
 
 class Protocolo:
 
-    def __init__(self, port):
-        self.com1 = enlace(port)
-        self.com1.enable()
-        print("#################### Port Opened ####################")
-
+    def __init__(self):
         self.headSize = 10
         self.EOPSize = 4
         self.payloadMaxSize = 114

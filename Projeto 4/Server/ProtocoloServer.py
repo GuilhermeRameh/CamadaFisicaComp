@@ -18,7 +18,11 @@ from Protocolo import Protocolo
 class Server(Protocolo):
 
     def __init__(self, port):
+        self.com1 = enlace(port)
+        self.com1.enable()
+        print("#################### Port Opened ####################")
         super().__init__(port)
+        self.id = b'\x66'
 
     ''' 
     TODO: 
@@ -31,11 +35,29 @@ class Server(Protocolo):
     '''
 
     def logicaPrincipal(self):
+        print("Esperando Mensagem")
         ocioso = True
 
         while ocioso:
-            self.com1.
+            self.estadoOcioso()
+
+        print("Na escuta!")
+
+        self.sendHandshake()
+        cont = 1
+
         
+
         return
 
+    def estadoOcioso(self):
+        msgt1, nMsgt1 = self.com1.getData(14)
+        id_do_servidor = msgt1[2]
 
+        if id_do_servidor == self.id:
+            ocioso = False
+        
+        time.sleep(0.1)
+
+    def sendHandshake(self):
+        return
