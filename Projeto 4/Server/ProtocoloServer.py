@@ -36,28 +36,51 @@ class Server(Protocolo):
 
     def logicaPrincipal(self):
         print("Esperando Mensagem")
-        ocioso = True
 
-        while ocioso:
-            self.estadoOcioso()
+        ###################### ENTRA NO PRIMEIRO LOOP ######################
+        ######################### ESTADO = OCIOSO ##########################
+        self.estadoOcioso()
 
         print("Na escuta!")
 
         self.sendHandshake()
-        cont = 1
 
-        
+        ###################### ENTRA NO SEGUNDO LOOP ######################
+        ##################### ESTADO = PEGANDO PACOTES ####################
+        self.estadoPegandoPacotes()
 
         return
 
     def estadoOcioso(self):
-        msgt1, nMsgt1 = self.com1.getData(14)
-        id_do_servidor = msgt1[2]
+        ocioso = True
+        while ocioso:
+                
+            msgt1, nMsgt1 = self.com1.getData(14)
+            id_do_servidor = msgt1[2]
+            self.id_do_sensor = msgt1[1]
 
-        if id_do_servidor == self.id:
-            ocioso = False
-        
-        time.sleep(0.1)
+            if id_do_servidor == self.id:
+                ocioso = False
+            
+            time.sleep(0.1)
 
     def sendHandshake(self):
-        return
+        self.constructDatagram(b'\x02', self.id_do_sensor, self.id)
+
+    def estadoPegandoPacotes(self):
+        cont = 1
+        pacotes_total = 100 # NOTE: Esse valor é arbitrário, apenas para iniciar o loop
+        self.receivedArray = []
+        previousId = b''
+
+        while cont <= pacotes_total:
+            print("\nGetting Head Data...")
+
+            bufferHead, nBufferHead = self.com1.getData(10)
+            pacotes_total = bufferHead[3]
+            id_pacote = bufferHead[4]
+            tamanho_pacote = bufferHead[5]
+
+            print(f"\nID do pacote a receber: {id_pacote}")
+            print(f"Tamanho do pacote a recber: {tamanho_pacote}")
+

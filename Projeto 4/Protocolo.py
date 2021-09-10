@@ -31,9 +31,9 @@ class Protocolo:
     def constructDatagram(self, tipo_da_mensagem, id_do_sensor, id_do_servidor, pacotes_total=b'\x00', id_pacote=b'\x00', id_do_arquivo=b'\x00', tamanho_pacote=b'\x00', pacote_recomeco=b'\x00', ultimo_pacote_recebido=b'\x00', pacote=b'', h8=b'\x00', h9=b'\x00'):
         ############### Monta Head #################
         
-        if tipo_da_mensagem==b'\x01':
+        if tipo_da_mensagem==b'\x01' or tipo_da_mensagem==b'\x02':
             h5 = id_do_arquivo
-        elif tipo_da_mensagem==b'\x02':
+        elif tipo_da_mensagem==b'\x03':
             h5 = tamanho_pacote
 
         head = b'' + tipo_da_mensagem + id_do_sensor + id_do_servidor + pacotes_total + id_pacote + h5 + pacote_recomeco + ultimo_pacote_recebido + h8 + h9
