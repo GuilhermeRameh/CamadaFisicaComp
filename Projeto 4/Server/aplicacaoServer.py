@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 import io
 from fileManager import *
-from Protocolo import *
+from ProtocoloServer import Protocolo
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
