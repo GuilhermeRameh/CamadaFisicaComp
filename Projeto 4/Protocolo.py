@@ -6,6 +6,7 @@
 
 import os
 from pathlib import Path
+import time
 from enlace import *
 import numpy as np
 import struct
@@ -28,21 +29,22 @@ class Protocolo:
         self.contBit = b'\x01'
         self.endBit = b'\x01'
 
-        self.eop = b'\xba\xba\xb0\xe1'
+        self.eop = b'\xFF\xAA\xFF\xAA'
 
         self.fileNumber = 1
         self.erro = True
 
-   # NOTE: a função que abre, le e fragmenta (monta os pacotes)
-   # vai ser feito pelo Bernardo. Por enquanto posso assumit que vou trabalhar 
-   # com uma lista, em que cada elemento da lista é um pacote com 114 bytes
+    def constructDatagram(self, tipo_da_mensagem, id_do_sensor, id_do_servidor, pacotes_total=b'\x00', id_pacote=b'\x00', id_do_arquivo=b'\x00', tamanho_pacote=b'\x00', pacote_recomeco=b'\x00', ultimo_pacote_recebido=b'\x00', pacote=b'', h8=b'\x00', h9=b'\x00'):
+        ############### Monta Head #################
+        
+        if tipo_da_mensagem==b'\x01':
+            h5 = id_do_arquivo
+        elif tipo_da_mensagem==b'\x02':
+            h5 = tamanho_pacote
 
-    def constructDatagram(self, tipo_da_mensagem, id_do_sensor, id_do_servidor, pacotes_total, id_pacote, h5, pacote_recomeco, ultimo_pacote_recebido, h8=b'\x00', h9):
+        head = b'' + tipo_da_mensagem + id_do_sensor + id_do_servidor + pacotes_total + id_pacote + h5 + pacote_recomeco + ultimo_pacote_recebido + h8 + h9
 
-        # ############### Monta Head #################
-        head = b'' + idPacote + pkgSize + pkgTotalSize + receiverId + resendBit + continueBit + endBit + freebits
-
-        txBuffer = b'' + head + package + self.eop
+        txBuffer = b'' + head + pacote + self.eop
 
         return txBuffer
 

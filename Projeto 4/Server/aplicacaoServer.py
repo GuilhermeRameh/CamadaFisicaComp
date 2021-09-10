@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 import io
 from fileManager import *
-from ProtocoloServer import Protocolo
+from ProtocoloServer import Server
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
@@ -26,17 +26,17 @@ serialName = "COM5"                  # Windows(variacao de)
 
 def main():
     main = True
-    protocolo = Protocolo(serialName)
+    server = Server(serialName)
     retorno = []
 
     while main:
         try:
-            print()       
+            server.constructDatagram(b'\x01', b'\x01', b'\x01')     
 
         except Exception as erro:
             print("ops! :-\\")
             print(erro)
-            protocolo.com1.disable()
+            server.com1.disable()
             main = False
 
     #so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
