@@ -21,17 +21,19 @@ from ProtocoloServer import Server
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-serialName = "COM5"                  # Windows(variacao de)
+serialName = "COM4"                  # Windows(variacao de)
 
 
 def main():
-    main = True
     server = Server(serialName)
+    main = Server.main(Server)
     retorno = []
 
     while main:
         try:
-            server.constructDatagram(b'\x01', b'\x01', b'\x01')   
+            server.constructDatagram(b'\x01', b'\x01', b'\x01')
+
+            server.estadoPegandoPacotes()   
 
         except Exception as erro:
             print("ops! :-\\")

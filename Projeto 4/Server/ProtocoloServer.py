@@ -20,9 +20,12 @@ class Server(Protocolo):
     def __init__(self, port):
         self.com1 = enlace(port)
         self.com1.enable()
+        self.main = True
+        self.id_do_server = b'\x66'
         print("#################### Port Opened ####################")
-        super().__init__(port)
-        self.id = b'\x66'
+        super().__init__()
+        
+        
 
     ''' 
     TODO: 
@@ -76,11 +79,36 @@ class Server(Protocolo):
         while cont <= pacotes_total:
             print("\nGetting Head Data...")
 
-            bufferHead, nBufferHead = self.com1.getData(10)
+            while self.com1.rx.timer1Bool:
+                bufferHead, nBufferHead = self.com1.getData(10)
+                time.sleep(0.05)
+                if self.com1.rx.timer2 > 20:
+                    print("\nTimeout [2]: 20 segundos sem resposta.")
+                    print("Desligando comunicação")
+                    txBuffer = self.constructDatagram(b'\x05', self.id_do_sensor, self.id_do_server)
+                    self.com1.sendData(txBuffer)
+                    self.com1.disable()
+                    self.main = False
+                    break
+
+            
+            tipo_da_mensagem = bufferHead[0]
+
+            if tipo_da_mensagem==b'\x03':
+                print("A mensagem é do tipo DADOS")
+
             pacotes_total = bufferHead[3]
             id_pacote = bufferHead[4]
             tamanho_pacote = bufferHead[5]
 
             print(f"\nID do pacote a receber: {id_pacote}")
-            print(f"Tamanho do pacote a recber: {tamanho_pacote}")
+            print(f"Tamanho do pacote a receber: {tamanho_pacote}")
 
+            bufferPacote, nPacoteBuffer = self.com1.getData(tamanho_pacote)
+
+            bufferEOP, nBufferEOP = self.com1.getData(4)
+
+
+
+    def main(self):
+        return self.main
