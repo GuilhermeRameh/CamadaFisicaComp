@@ -73,7 +73,7 @@ class RX(object):
         if self.timer2Bool:
             self.timer2inicial = time.time()
             self.timer2Bool = False
-            
+        
         while(self.getBufferLen() < nData):
             time.sleep(0.05)
             self.timer1 = time.time() - startTime
@@ -81,6 +81,7 @@ class RX(object):
             if self.timer1>2 and not self.inOcioso:
                 print("Timeout [1]: Reiniciando recebimento de dados.")
                 return (b'')
+        
 
         self.threadPause()
         b           = self.buffer[0:nData]

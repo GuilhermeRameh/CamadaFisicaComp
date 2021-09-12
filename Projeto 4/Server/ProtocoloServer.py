@@ -62,8 +62,9 @@ class Server(Protocolo):
             id_do_servidor = msgt1[2].to_bytes(1, "big")
             self.id_do_sensor = msgt1[1].to_bytes(1, "big")
             tipo_da_mensagem = msgt1[0].to_bytes(1, "big")
-
+            
             if id_do_servidor == self.id_do_server and tipo_da_mensagem == b'\x01':
+                print("Recebi uma mensagem para mim!")
                 ocioso = False
                 self.com1.rx.inOcioso = False
             
@@ -83,12 +84,12 @@ class Server(Protocolo):
 
         while cont <= pacotes_total:
             print("\nGetting Head Data...")
+            self.com1.rx.timer1Bool = True
 
             while self.com1.rx.timer1Bool:
 
                 bufferHead, nBufferHead = self.com1.getData(10)
                 time.sleep(0.05)
-                print("só pra confirmar que ele fica preso no getData")
 
                 if self.com1.rx.timer1>2:
                     self.com1.sendData(self.msgt2)
