@@ -57,31 +57,42 @@ class Server(Protocolo):
     def estadoOcioso(self):
         ocioso = True
         while ocioso:
-                
-            msgt1, nMsgt1 = self.com1.getData(14)
-            id_do_servidor = msgt1[2]
-            self.id_do_sensor = msgt1[1]
-
-            if id_do_servidor == self.id:
-                ocioso = False
             
-            time.sleep(0.1)
+            msgt1, nMsgt1 = self.com1.getData(14)
+            id_do_servidor = msgt1[2].to_bytes(1, "big")
+            self.id_do_sensor = msgt1[1].to_bytes(1, "big")
+            tipo_da_mensagem = msgt1[0].to_bytes(1, "big")
+
+            if id_do_servidor == self.id_do_server and tipo_da_mensagem == b'\x01':
+                ocioso = False
+                self.com1.rx.inOcioso = False
+            
+            time.sleep(0.05)
 
     def sendHandshake(self):
-        self.constructDatagram(b'\x02', self.id_do_sensor, self.id)
+        txBuffer = self.constructDatagram(b'\x02', self.id_do_sensor, self.id_do_server)
+        self.msgt2 = txBuffer
+        self.com1.sendData(self.msgt2)
 
     def estadoPegandoPacotes(self):
         cont = 1
         pacotes_total = 100 # NOTE: Esse valor é arbitrário, apenas para iniciar o loop
         self.receivedArray = []
+        
         previousId = b''
 
         while cont <= pacotes_total:
             print("\nGetting Head Data...")
 
             while self.com1.rx.timer1Bool:
+
                 bufferHead, nBufferHead = self.com1.getData(10)
                 time.sleep(0.05)
+                print("só pra confirmar que ele fica preso no getData")
+
+                if self.com1.rx.timer1>2:
+                    self.com1.sendData(self.msgt2)
+
                 if self.com1.rx.timer2 > 20:
                     print("\nTimeout [2]: 20 segundos sem resposta.")
                     print("Desligando comunicação")
@@ -90,6 +101,8 @@ class Server(Protocolo):
                     self.com1.disable()
                     self.main = False
                     break
+
+                
 
             
             tipo_da_mensagem = bufferHead[0]
@@ -108,6 +121,9 @@ class Server(Protocolo):
 
             bufferEOP, nBufferEOP = self.com1.getData(4)
 
+    def flushPortTX(self):
+        self.com1.rx.fisica.flush()
+        self.com1.rx.clearBuffer()
 
 
     def main(self):

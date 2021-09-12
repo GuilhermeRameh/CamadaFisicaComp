@@ -5,49 +5,28 @@
 #######################################
 
 import os
+import sys
 from pathlib import Path
 from enlace import *
 import numpy as np
 import struct
 from fileManager import *
 
-class Protocolo:
+sys.path.insert(1, os.path.realpath(os.path.pardir))
+from Protocolo import Protocolo
+
+class Client(Protocolo):
 
     def __init__(self, port):
         self.com1 = enlace(port)
         self.com1.enable()
         print("#################### Port Opened ####################")
 
-        self.headSize = 10
-        self.EOPSize = 4
-        self.payloadMaxSize = 114
-
-        self.extension = ''
-
-        self.resendBit = b'\x01'
-        self.contBit = b'\x01'
-        self.endBit = b'\x01'
-
-        self.eop = b'\xba\xba\xb0\xe1'
-
-        self.fileNumber = 1
-        self.erro = True
+        super().__init__()
 
    # Note to self: a função que abre, le e fragmenta (monta os pacotes)
    # vai ser feito pelo Bernardo. Por enquanto posso assumit que vou trabalhar 
    # com uma lista, em que cada elemento da lista é um pacote com 114 bytes
-
-    def constructDatagram(self, idPacote, receiverId, package, pkgSize=b'\x00', pkgTotalSize=b'\x00\x00', resendBit=b'\x00', continueBit=b'\x00', endBit = b'\x00',freebits=b'\x00\x00'):
-
-        # To-Do: Completar função que monta o Datagrama. 
-
-        # ############### Monta Head #################
-        head = b'' + idPacote + pkgSize + pkgTotalSize + receiverId + resendBit + continueBit + endBit + freebits
-
-        txBuffer = b'' + head + package + self.eop
-
-        return txBuffer
-
     def sendingLoop(self, packages):
         pkgTotalSize = (len(packages)-1).to_bytes(2, 'big')
         receiverId = b'\x69'
@@ -147,30 +126,9 @@ class Protocolo:
         receivedShake, nRx = self.com1.getData(14)
         self.com1.sendData(receivedShake)
 
-    def reconstructMessage(self):
-        curPath = Path(__file__).parent.resolve()
-        filepath = self.receivedArray[0].decode('utf-8')
-        filepath = str(curPath) + '/' + filepath
-        del self.receivedArray[0]
-        verify = True
-        while verify:
-            if os.path.exists(filepath):
-                fileNum = str(self.fileNumber)
-                fileNum = "("+fileNum+")."
-                if self.fileNumber > 1:
-                    filepath = filepath.replace("("+str(self.fileNumber - 1)+").", fileNum)
-                    self.fileNumber += 1
-                else:
-                    filepath = filepath.replace(".", fileNum)
-                    self.fileNumber += 1
-
-
-                
-            else:
-                verify = False
-        print(f'O novo arquivo será encontrado em: {filepath}')
-        newFile = open(filepath, 'wb')
-        for content in self.receivedArray:
-            newFile.write(content)
-        newFile.close()
-
+    def flushPortTX(self):
+        self.com1.tx.fisica.flush()
+        print("dei flush no bagulho")
+        time.sleep(1)
+        self.com1.sendData(b'\x01')
+        time.sleep(1)

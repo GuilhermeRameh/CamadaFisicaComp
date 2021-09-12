@@ -31,9 +31,9 @@ def main():
 
     while main:
         try:
-            server.constructDatagram(b'\x01', b'\x01', b'\x01')
+            server.flushPortTX()
 
-            server.estadoPegandoPacotes()   
+            server.logicaPrincipal()   
 
         except Exception as erro:
             print("ops! :-\\")
