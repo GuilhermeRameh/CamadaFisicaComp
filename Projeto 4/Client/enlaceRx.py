@@ -23,6 +23,14 @@ class RX(object):
         self.threadMutex = True
         self.READLEN     = 1024
 
+        self.msgType = b'\x00'
+        self.msgType1 = b'\x01' 
+        self.msgType2 = b'\x02'
+        self.msgType3 = b'\x03'
+        self.msgType4 = b'\x04'
+        self.msgType5 = b'\x05'
+        self.msgType6 = b'\x06'
+
     def thread(self): 
         while not self.threadStop:
             if(self.threadMutex == True):
@@ -65,16 +73,25 @@ class RX(object):
         b           = self.buffer[0:nData]
         self.buffer = self.buffer[nData:]
         self.threadResume()
+        if self.msgType == self.msgType1:
+            time.sleep(5)
         return(b)
 
-    def getNData(self, size):
-        startTime = time.time()
+    def getNData(self, size, msgType, refFiveSec, refTwentySec):
+        self.msgType = msgType
+        if refFiveSec == 0.0 or refTwentySec == 0.0:
+            refFiveSec = time.time()
+            refTwentySec = time.time()
         while(self.getBufferLen() < size):
             time.sleep(0.05)      
-            runtime = time.time() - startTime
-            if runtime>5:
-                print("Timeout, passaram-se 5 segundos sem resposta\nO que estava no buffer era: {}".format(self.getBuffer(size)))
-                return (b'\x00')  
+            runtimeFive = time.time() - refFiveSec
+            runtimeTwenty = time.time() - refTwentySec
+            if runtimeFive >= 5:
+                print("\n\n\nPassaram-se 5 segundos sem receber uma resposta.")
+                return (b'\x00')
+            if runtimeTwenty >= 20:
+                print("\n\n\nTimeout passaram-se 20 segundos sem receber resposta do Servidor.")
+                return (b'\xFF')
         return(self.getBuffer(size))
      
 

@@ -23,6 +23,13 @@ class Protocolo:
         self.contBit = b'\x01'
         self.endBit = b'\x01'
 
+        self.msgType1 = b'\x01' 
+        self.msgType2 = b'\x02'
+        self.msgType3 = b'\x03'
+        self.msgType4 = b'\x04'
+        self.msgType5 = b'\x05'
+        self.msgType6 = b'\x06'
+
         self.eop = b'\xFF\xAA\xFF\xAA'
 
         self.fileNumber = 1
@@ -35,6 +42,8 @@ class Protocolo:
             h5 = id_do_arquivo
         elif tipo_da_mensagem==b'\x03':
             h5 = tamanho_pacote
+        else: 
+            h5 = b'\x00'
 
         head = b'' + tipo_da_mensagem + id_do_sensor + id_do_servidor + pacotes_total + id_pacote + h5 + pacote_recomeco + ultimo_pacote_recebido + h8 + h9
 
