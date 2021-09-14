@@ -33,7 +33,7 @@ def main():
         try:
             server.flushPortTX()
 
-            server.logicaPrincipal()   
+            server.logicaPrincipal()
 
         except Exception as erro:
             print("ops! :-\\")

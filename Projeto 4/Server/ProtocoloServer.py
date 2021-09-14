@@ -52,8 +52,6 @@ class Server(Protocolo):
         ##################### ESTADO = PEGANDO PACOTES ####################
         self.estadoPegandoPacotes()
 
-        return
-
     def estadoOcioso(self):
         ocioso = True
         while ocioso:
@@ -101,31 +99,46 @@ class Server(Protocolo):
                     self.com1.sendData(txBuffer)
                     self.com1.disable()
                     self.main = False
-                    break
+                    return
 
-                
-
-            
             tipo_da_mensagem = bufferHead[0]
 
             if tipo_da_mensagem==b'\x03':
                 print("A mensagem é do tipo DADOS")
 
-            pacotes_total = bufferHead[3]
-            id_pacote = bufferHead[4]
-            tamanho_pacote = bufferHead[5]
+            pacotes_total = bufferHead[3].to_bytes(1, "big")
+            id_pacote = bufferHead[4].to_bytes(1, "big")
+            tamanho_pacote = bufferHead[5].to_bytes(1, "big")
+            previousId = bufferHead[7].to_bytes(1, "big")
 
             print(f"\nID do pacote a receber: {id_pacote}")
             print(f"Tamanho do pacote a receber: {tamanho_pacote}")
+            print("\nGetting Payload...")
 
             bufferPacote, nPacoteBuffer = self.com1.getData(tamanho_pacote)
 
+            print("\nGetting EOP...")
             bufferEOP, nBufferEOP = self.com1.getData(4)
+            
+            if bufferEOP == self.eop and id_pacote.from_bytes(1, "big") == cont:
+                print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
+                self.receivedArray.append(bufferPacote)
+                cont += 1
+                txBuffer = self.constructDatagram(b'\x04', self.id_do_sensor, self.id_do_server, ultimo_pacote_recebido=id_pacote)
+                time.sleep(0.01)
+                self.com1.sendData(txBuffer)
+            else:
+                print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
+                txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
+                time.sleep(0.01)
+                self.com1.sendData(txBuffer)
+
 
     def flushPortTX(self):
         self.com1.rx.fisica.flush()
+        time.sleep(1)
         self.com1.rx.clearBuffer()
-
+        time.sleep(1)
 
     def main(self):
         return self.main
