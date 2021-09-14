@@ -4,7 +4,6 @@
 #             Cliente
 #######################################
 
-from _typeshed import Self
 import os
 import sys
 from pathlib import Path
@@ -12,8 +11,6 @@ from enlace import *
 import numpy as np
 import struct
 from fileManager import *
-
-sys.path.insert(1, os.path.realpath(os.path.pardir))
 from Protocolo import Protocolo
 
 class Client(Protocolo):
@@ -47,7 +44,7 @@ class Client(Protocolo):
             self.fiveSecTimer = time.time() - self.refFiveSec
             self.twentySecTimer = time.time() - self.refTwentySec
             self.receiveResponse()
-            if self.twentySecTimer > 20:
+            if self.twentySecTimer >= 20:
                 self.sendTimeoutMessage()
                 break
         print("\n\n\nEncerrando Transmissão.")
@@ -61,37 +58,41 @@ class Client(Protocolo):
             print("Esperando resposta do handshake.")
             rxBuffer, nRx = self.com1.getData(14, self.msgType1)
             msgType = rxBuffer[0]
-            eop = rxBuffer[11:14]
-            if msgType == self.msgType2 and eop == self.eop:
+            eop = rxBuffer[10:14]
+            print(f"Recebi mensagem do tipo {type(msgType)}, eop {eop}")
+            if msgType.to_bytes(1, 'big') == self.msgType2 and eop == self.eop:
                 self.inicia = True
                 self.cont = 1
                 break
 
     def sendPackage(self):
-        package = self.packages[self.cont]
+        package = self.packages[self.cont-1]
         totalPackages = self.numPackages.to_bytes(1,'big')
         packageId = self.cont.to_bytes(1,'big')
         packageSize = len(package)
-        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSize, pacote=package)
-        print(f"\n\nEnviando o Pacote n°{self.cont}.")
+        packageSizeBytes = packageSize.to_bytes(1,'big')
+        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package)
+        print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
         self.com1.sendData(txBuffer)
     
     def receiveResponse(self):
+        print("Esperando resposta do Server")
         rxBuffer, nRx = self.com1.getData(14, msgType=self.msgType3, refFiveSec=self.refFiveSec, refTwentySec=self.refTwentySec)
-        msgType = rxBuffer[0]
-        eop = rxBuffer[11:14]
+        print(f"Recebi a mensagem {rxBuffer}")
+        msgType = rxBuffer[0].to_bytes(1,'big')
+        eop = rxBuffer[10:14]
         if msgType == self.msgType4 and eop == self.eop:
-            self.cont += 1
             self.msgError = False
             print(f"\nO server Falou que tudo estava ok com o pacote n°{self.cont}, seguindo para o próximo.")
+            self.cont += 1
         elif msgType == self.msgType6 and eop == self.eop:
             packageToResend = rxBuffer[6]
-            self.cont = int.from_bytes(packageToResend, 'big')
+            self.cont = packageToResend
             self.msgError = True
             print(f"\n\nRecebi mensagem de erro, re-enviando pacote defeituoso de n°{self.cont}.")
         elif rxBuffer == b'\xFF':
             self.fiveSecTimer = time.time() - self.refFiveSec
-            self.twentySecTimer = time.time() - self.refTwentySec
+            self.twentySecTimer = 20
             print("Enviando mensagem de timeout para Server.")
         elif rxBuffer == b'\x00':
             self.fiveSecTimer = time.time() - self.refFiveSec
@@ -99,7 +100,7 @@ class Client(Protocolo):
             print("re-enviando mensagem.")
         
     def sendTimeoutMessage(self):
-        txBuffer = super().constructDatagram(self.msgType1, self.id, self.idServer)
+        txBuffer = super().constructDatagram(self.msgType6, self.id, self.idServer)
         self.com1.sendData(txBuffer)
                 
     def flushPortTX(self):
