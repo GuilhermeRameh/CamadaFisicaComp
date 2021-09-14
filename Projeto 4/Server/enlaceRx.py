@@ -87,12 +87,12 @@ class RX(object):
         b           = self.buffer[0:nData]
         self.buffer = self.buffer[nData:]
         self.threadResume()
-        self.timer1Bool = False
         return(b)
 
 
     def getNData(self, size):
-        return(self.getBuffer(size))
+        if self.buffer != None:
+            return(self.getBuffer(size))
      
 
     def clearBuffer(self):

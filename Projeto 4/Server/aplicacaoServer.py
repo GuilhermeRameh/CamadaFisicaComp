@@ -26,14 +26,14 @@ serialName = "COM4"                  # Windows(variacao de)
 
 def main():
     server = Server(serialName)
-    main = Server.main(Server)
+    main = server.main
     retorno = []
 
     while main:
         try:
-            server.flushPortTX()
-
             server.logicaPrincipal()
+
+            server.reconstructMessage()
 
         except Exception as erro:
             print("ops! :-\\")

@@ -50,7 +50,11 @@ class Server(Protocolo):
 
         ###################### ENTRA NO SEGUNDO LOOP ######################
         ##################### ESTADO = PEGANDO PACOTES ####################
-        self.estadoPegandoPacotes()
+        checkResult =  self.estadoPegandoPacotes()
+        if checkResult=="SHUTDOWN":
+            return
+
+        print(self.receivedArray)
 
     def estadoOcioso(self):
         ocioso = True
@@ -75,12 +79,14 @@ class Server(Protocolo):
 
     def estadoPegandoPacotes(self):
         cont = 1
-        pacotes_total = 100 # NOTE: Esse valor é arbitrário, apenas para iniciar o loop
+        pacotes_total = b'\xFF' # NOTE: Esse valor é arbitrário, apenas para iniciar o loop
         self.receivedArray = []
         
-        previousId = b''
+        previousId = 0
 
-        while cont <= pacotes_total:
+        while cont <= int.from_bytes(pacotes_total, "big"):
+
+            print(f'\n\n\n{cont <= int.from_bytes(pacotes_total, "big")}\n\n\n')
             print("\nGetting Head Data...")
             self.com1.rx.timer1Bool = True
 
@@ -99,46 +105,51 @@ class Server(Protocolo):
                     self.com1.sendData(txBuffer)
                     self.com1.disable()
                     self.main = False
-                    return
+                    return "SHUTDOWN"
 
-            tipo_da_mensagem = bufferHead[0]
+                if nBufferHead != 0:
+                    tipo_da_mensagem = bufferHead[0].to_bytes(1, "big")
+                    if tipo_da_mensagem == b'\x03':
+                        self.com1.rx.timer1Bool = False
+                        self.com1.rx.timer2Bool = True
 
             if tipo_da_mensagem==b'\x03':
                 print("A mensagem é do tipo DADOS")
 
-            pacotes_total = bufferHead[3].to_bytes(1, "big")
-            id_pacote = bufferHead[4].to_bytes(1, "big")
-            tamanho_pacote = bufferHead[5].to_bytes(1, "big")
-            previousId = bufferHead[7].to_bytes(1, "big")
+                pacotes_total = bufferHead[3].to_bytes(1, "big")
+                id_pacote = bufferHead[4].to_bytes(1, "big")
+                tamanho_pacote = bufferHead[5].to_bytes(1, "big")
 
-            print(f"\nID do pacote a receber: {id_pacote}")
-            print(f"Tamanho do pacote a receber: {tamanho_pacote}")
-            print("\nGetting Payload...")
+                print(f"\nID do pacote a receber: {int.from_bytes(id_pacote, byteorder='big')}")
+                print(f"Tamanho do pacote a receber: {int.from_bytes(tamanho_pacote, byteorder='big')}")
+                print("\nGetting Payload...")
 
-            bufferPacote, nPacoteBuffer = self.com1.getData(tamanho_pacote)
+                bufferPacote, nPacoteBuffer = self.com1.getData(int.from_bytes(tamanho_pacote, "big"))
 
-            print("\nGetting EOP...")
-            bufferEOP, nBufferEOP = self.com1.getData(4)
-            
-            if bufferEOP == self.eop and id_pacote.from_bytes(1, "big") == cont:
-                print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
-                self.receivedArray.append(bufferPacote)
-                cont += 1
-                txBuffer = self.constructDatagram(b'\x04', self.id_do_sensor, self.id_do_server, ultimo_pacote_recebido=id_pacote)
-                time.sleep(0.01)
-                self.com1.sendData(txBuffer)
-            else:
-                print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
-                txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
-                time.sleep(0.01)
-                self.com1.sendData(txBuffer)
+                print("\nGetting EOP...")
+                bufferEOP, nBufferEOP = self.com1.getData(4)
+                
+                if bufferEOP == self.eop and int.from_bytes(id_pacote, "big") == cont:
+                    print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
+                    self.receivedArray.append(bufferPacote)
+                    cont += 1
+                    previousId = id_pacote
+                    txBuffer = self.constructDatagram(b'\x04', self.id_do_sensor, self.id_do_server, ultimo_pacote_recebido=id_pacote)
+                    time.sleep(0.1)
+                    self.com1.sendData(txBuffer)
+                else:
+                    print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
+                    if previousId == 0:
+                        txBuffer = self.msgt2
+                    else:
+                        txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
+                    time.sleep(0.1)
+                    self.com1.sendData(txBuffer)
 
+        return "SUCCESS"
 
     def flushPortTX(self):
         self.com1.rx.fisica.flush()
         time.sleep(1)
         self.com1.rx.clearBuffer()
         time.sleep(1)
-
-    def main(self):
-        return self.main
