@@ -53,6 +53,9 @@ class Server(Protocolo):
         checkResult =  self.estadoPegandoPacotes()
         if checkResult=="SHUTDOWN":
             return
+        else:
+            print("SUCCESS!")
+            return
 
         print(self.receivedArray)
 
@@ -70,7 +73,7 @@ class Server(Protocolo):
                 ocioso = False
                 self.com1.rx.inOcioso = False
             
-            time.sleep(0.05)
+            time.sleep(1)
 
     def sendHandshake(self):
         txBuffer = self.constructDatagram(b'\x02', self.id_do_sensor, self.id_do_server)
@@ -93,7 +96,6 @@ class Server(Protocolo):
             while self.com1.rx.timer1Bool:
 
                 bufferHead, nBufferHead = self.com1.getData(10)
-                time.sleep(0.05)
 
                 if self.com1.rx.timer1>2:
                     self.com1.sendData(self.msgt2)
@@ -103,7 +105,6 @@ class Server(Protocolo):
                     print("Desligando comunicação")
                     txBuffer = self.constructDatagram(b'\x05', self.id_do_sensor, self.id_do_server)
                     self.com1.sendData(txBuffer)
-                    self.com1.disable()
                     self.main = False
                     return "SHUTDOWN"
 
@@ -112,6 +113,8 @@ class Server(Protocolo):
                     if tipo_da_mensagem == b'\x03':
                         self.com1.rx.timer1Bool = False
                         self.com1.rx.timer2Bool = True
+                    
+                    time.sleep(1)
 
             if tipo_da_mensagem==b'\x03':
                 print("A mensagem é do tipo DADOS")
@@ -135,7 +138,6 @@ class Server(Protocolo):
                     cont += 1
                     previousId = id_pacote
                     txBuffer = self.constructDatagram(b'\x04', self.id_do_sensor, self.id_do_server, ultimo_pacote_recebido=id_pacote)
-                    time.sleep(0.1)
                     self.com1.sendData(txBuffer)
                 else:
                     print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
@@ -143,13 +145,12 @@ class Server(Protocolo):
                         txBuffer = self.msgt2
                     else:
                         txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
-                    time.sleep(0.1)
                     self.com1.sendData(txBuffer)
 
         return "SUCCESS"
 
     def flushPortTX(self):
-        self.com1.rx.fisica.flush()
+        self.com1.tx.fisica.flush()
         time.sleep(1)
-        self.com1.rx.clearBuffer()
+        self.com1.sendData(b'\x69')
         time.sleep(1)

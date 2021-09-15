@@ -32,7 +32,6 @@ def main():
     while main:
         try:
             server.logicaPrincipal()
-
             server.reconstructMessage()
 
         except Exception as erro:
