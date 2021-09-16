@@ -36,6 +36,7 @@ class Client(Protocolo):
 
     def mainLoop(self):
         self.handShake()
+        self.com1.rx.clearBuffer()
         while self.cont <= self.numPackages:
             self.sendPackage()
             if (self.fiveSecTimer) < 5 or self.msgError:
