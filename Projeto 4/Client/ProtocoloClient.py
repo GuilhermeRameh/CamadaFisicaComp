@@ -11,6 +11,8 @@ from enlace import *
 import numpy as np
 import struct
 from fileManager import *
+
+sys.path.insert(1, os.path.realpath(os.path.pardir))
 from Protocolo import Protocolo
 
 class Client(Protocolo):

@@ -11,6 +11,7 @@
 
 
 from enlace import *
+import traceback
 import time
 import numpy as np
 from PIL import Image
@@ -34,6 +35,7 @@ def main():
         server.reconstructMessage()
 
     except Exception as erro:
+        print(traceback.format_exc())
         print("ops! :-\\")
         print(erro)
         server.com1.disable()
