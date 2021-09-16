@@ -52,10 +52,10 @@ class Server(Protocolo):
         ##################### ESTADO = PEGANDO PACOTES ####################
         checkResult =  self.estadoPegandoPacotes()
         if checkResult=="SHUTDOWN":
-            return
+            print(":-(")
         else:
             print("SUCCESS!")
-            return
+            
 
         print(self.receivedArray)
 
@@ -89,7 +89,6 @@ class Server(Protocolo):
 
         while cont <= int.from_bytes(pacotes_total, "big"):
 
-            print(f'\n\n\n{cont <= int.from_bytes(pacotes_total, "big")}\n\n\n')
             print("\nGetting Head Data...")
             self.com1.rx.timer1Bool = True
 
@@ -105,7 +104,7 @@ class Server(Protocolo):
                     print("Desligando comunicação")
                     txBuffer = self.constructDatagram(b'\x05', self.id_do_sensor, self.id_do_server)
                     self.com1.sendData(txBuffer)
-                    self.main = False
+                    self.com1.disable()
                     return "SHUTDOWN"
 
                 if nBufferHead != 0:
@@ -131,7 +130,11 @@ class Server(Protocolo):
 
                 print("\nGetting EOP...")
                 bufferEOP, nBufferEOP = self.com1.getData(4)
-                
+
+
+                print(f'\nMensagem Inteira: {bufferHead+bufferPacote+bufferEOP}')
+                print(f'Contagem: {cont}, ID: {id_pacote}\n')
+
                 if bufferEOP == self.eop and int.from_bytes(id_pacote, "big") == cont:
                     print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
                     self.receivedArray.append(bufferPacote)
@@ -147,6 +150,7 @@ class Server(Protocolo):
                         txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
                     self.com1.sendData(txBuffer)
 
+        self.com1.disable()
         return "SUCCESS"
 
     def flushPortTX(self):
