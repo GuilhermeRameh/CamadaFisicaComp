@@ -33,7 +33,7 @@ def main():
         try:
             client.flushPortTX()
 
-            txBuffer = client.constructDatagram(b'\x01', b'\x01', b'\x01')
+            txBuffer = client.constructDatagram(b'\x01', b'\x01', b'\x66')
             client.com1.sendData(txBuffer)
             print(txBuffer)
             main = False

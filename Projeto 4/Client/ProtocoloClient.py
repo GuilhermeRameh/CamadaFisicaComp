@@ -105,7 +105,6 @@ class Client(Protocolo):
                 
     def flushPortTX(self):
         self.com1.tx.fisica.flush()
-        print("dei flush no bagulho")
         time.sleep(1)
         self.com1.sendData(b'\x01')
         time.sleep(1)
