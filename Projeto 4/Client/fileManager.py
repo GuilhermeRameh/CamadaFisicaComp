@@ -2,7 +2,7 @@ from math import ceil
 
 class FileManager:
 	def __init__(self, filepath):
-		self.filepath = filepath
+		self.filepath = str(filepath)
 		self.extension = self.filepath.split(".")[1]
 	def dividePackages(self):
 		packageList = []

@@ -21,23 +21,22 @@ from ProtocoloServer import Server
 #use uma das 3 opcoes para atribuir à variável a porta usada
 # serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-serialName = "COM5"                  # Windows(variacao de)
+serialName = "COM3"                  # Windows(variacao de)
 
 
 def main():
-    main = True
     server = Server(serialName)
     retorno = []
 
-    while main:
-        try:
-            server.constructDatagram(b'\x01', b'\x01', b'\x01')   
+    
+    try:
+        server.logicaPrincipal()
+        server.reconstructMessage()
 
-        except Exception as erro:
-            print("ops! :-\\")
-            print(erro)
-            server.com1.disable()
-            main = False
+    except Exception as erro:
+        print("ops! :-\\")
+        print(erro)
+        server.com1.disable()
 
     #so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
 if __name__ == "__main__":

@@ -1,176 +1,110 @@
 ########################################
 # Arquivo para a criação da Classe 
 #            PROTOCOLO
-#
+#             Cliente
 #######################################
 
 import os
+import sys
 from pathlib import Path
 from enlace import *
 import numpy as np
 import struct
 from fileManager import *
+from Protocolo import Protocolo
 
-class Protocolo:
+class Client(Protocolo):
 
-    def __init__(self, port):
+    def __init__(self, port, idServer, fileId, packages):
+        super().__init__()
         self.com1 = enlace(port)
         self.com1.enable()
         print("#################### Port Opened ####################")
+        self.id = b'\x50'
+        self.idServer = idServer
+        self.fileId = fileId
+        self.packages = packages
+        self.numPackages = len(packages)
+        self.inicia = False
+        self.msgError = False
+        self.cont = 0
 
-        self.headSize = 10
-        self.EOPSize = 4
-        self.payloadMaxSize = 114
+        self.refFiveSec = 0.0
+        self.refTwentySec = 0.0
+        self.fiveSecTimer = 0.0
+        self.twentySecTimer = 0.0
 
-        self.extension = ''
-
-        self.resendBit = b'\x01'
-        self.contBit = b'\x01'
-        self.endBit = b'\x01'
-
-        self.eop = b'\xba\xba\xb0\xe1'
-
-        self.fileNumber = 1
-        self.erro = True
-
-   # Note to self: a função que abre, le e fragmenta (monta os pacotes)
-   # vai ser feito pelo Bernardo. Por enquanto posso assumit que vou trabalhar 
-   # com uma lista, em que cada elemento da lista é um pacote com 114 bytes
-
-    def constructDatagram(self, idPacote, receiverId, package, pkgSize=b'\x00', pkgTotalSize=b'\x00\x00', resendBit=b'\x00', continueBit=b'\x00', endBit = b'\x00',freebits=b'\x00\x00'):
-
-        # To-Do: Completar função que monta o Datagrama. 
-
-        # ############### Monta Head #################
-        head = b'' + idPacote + pkgSize + pkgTotalSize + receiverId + resendBit + continueBit + endBit + freebits
-
-        txBuffer = b'' + head + package + self.eop
-
-        return txBuffer
-
-    def sendingLoop(self, packages):
-        pkgTotalSize = (len(packages)-1).to_bytes(2, 'big')
-        receiverId = b'\x69'
-        endStatus = b'\x00'
-        print(f"Total de pacotes a serem enviados {len(packages)}")
-        for i in range(len(packages)):
-            if endStatus == self.endBit:
+    def mainLoop(self):
+        self.handShake()
+        while self.cont <= self.numPackages:
+            self.sendPackage()
+            if (self.fiveSecTimer) < 5 or self.msgError:
+                    self.refTwentySec = time.time()
+            self.refFiveSec = time.time()        
+            self.fiveSecTimer = time.time() - self.refFiveSec
+            self.twentySecTimer = time.time() - self.refTwentySec
+            self.receiveResponse()
+            if self.twentySecTimer >= 20:
+                self.sendTimeoutMessage()
                 break
-            while True:
-                print(f"\nIniciando envio do pacote de ID {i}")
-                package = bytes(packages[i])
-                idPacote = struct.pack('B', i)
-                if i ==1 and self.erro:
-                    idPacote = struct.pack('B', 0)
-                    self.erro = False
-                pkgSize = struct.pack('B', len(package))
-
-                txBuffer = self.constructDatagram(idPacote, receiverId, package, pkgSize=pkgSize, pkgTotalSize=pkgTotalSize)          
-
-                self.com1.sendData(txBuffer)
-
-                responseBuffer, nResponseBuffer = self.com1.getData(14)
-                time.sleep(0.01)
-                repeatStatus = responseBuffer[5].to_bytes(1, 'big')
-                contStatus = responseBuffer[6].to_bytes(1, 'big')
-                endStatus = responseBuffer[7].to_bytes(1, 'big')
-                if contStatus == self.contBit and repeatStatus != self.resendBit:
-                    print("Nada de errado na transmição enviando próximo pacote.")
-                    break
-                else:
-                    print(f"Algo deu errado reiniciando envio do pacote de ID {i}")
+        print("\n\n\nEncerrando Transmissão.")
         self.com1.disable()
-        print("\n\n\nLoop de Envio concluído com sucesso!")
 
-    def receivingLoop(self):
-        receiving = True
-        self.receivedArray = []
-        previousId = b''
+    def handShake(self):
+        print("Iniciando handShake.")
+        while not self.inicia:
+            txBuffer = super().constructDatagram(self.msgType1, self.id, self.idServer, id_do_arquivo=self.fileId)
+            self.com1.sendData(txBuffer)
+            print("Esperando resposta do handshake.")
+            rxBuffer, nRx = self.com1.getData(14, self.msgType1)
+            msgType = rxBuffer[0]
+            eop = rxBuffer[10:14]
+            print(f"Recebi mensagem do tipo {type(msgType)}, eop {eop}")
+            if msgType.to_bytes(1, 'big') == self.msgType2 and eop == self.eop:
+                self.inicia = True
+                self.cont = 1
+                break
 
-        while receiving:
-            print("\n\nGetting Head Data...")
-            bufferHead, headSize = self.com1.getData(10)   
-
-            payloadId = bufferHead[0].to_bytes(1,'big')
-            payloadSize = bufferHead[1]
-            nPacotes = bufferHead[2:4]
-            
-            print(f'Quantidade de Pacotes: {int.from_bytes(nPacotes, "big")}')
-            print(f'ID do Pacote: {bufferHead[0]}')
-            print("\nGetting Payload Data...")
-            bufferPayload, payloadBufferSize = self.com1.getData(payloadSize)
-
-            #To-Do: Implementar uma função de timeoout
-
-            bufferEOP, nBufferEOP = self.com1.getData(4)
-            if bufferEOP != self.eop or previousId == payloadId:
-                print("\n\nEnvio Incorreto, enviando pedido para correção de pacote...")
-                sendAgainBuffer = self.constructDatagram(payloadId, b'\x42', b'', resendBit=self.resendBit)
-                self.com1.sendData(sendAgainBuffer)
-            else:
-                print("\n\nEOP correto pedindo novo envio")
-                self.receivedArray.append(bufferPayload)
-                contBuffer = self.constructDatagram(payloadId, b'\x42', b'', continueBit=self.contBit)
-                self.com1.sendData(contBuffer)
-            previousId = payloadId 
-
-            if (b'\x00'+payloadId) == nPacotes:
-                print("\n\n\nRecebi todos os pacotes")
-                receiving = False
-
-        print('\n\nenviando mensagem de fim')
-        endBuffer = self.constructDatagram(b'\x00', b'\x42', b'', endBit=self.endBit)
-        self.com1.sendData(endBuffer)
-        self.com1.disable()
-        print("\n\nRecebimento concluído com sucesso")
-        return self.receivedArray
-
-    def sendHandshake(self):
-        send = True
-        handShake = self.constructDatagram(b'\x00', b'\x00', b'')
-        while send:
-            print("\n\nIniciando Handshake")
-            self.com1.sendData(handShake)
-            time.sleep(0.05)
-            receivedShake, nRx = self.com1.getData(14)
-            if receivedShake == handShake:
-                send = False
-                print("\n\nReceptor está vivo, iniciando transmissão")
-            elif(receivedShake == b'\x00'):
-                print("\n\nServidor inativo.")
-                reenviar = input("\n Deseja tentar novamente: S/N?\n")
-                if reenviar == "N":
-                    send = False
-
-    def receiveHandShake(self):
-        print("\n\nRecebendo handshake")
-        receivedShake, nRx = self.com1.getData(14)
-        self.com1.sendData(receivedShake)
-
-    def reconstructMessage(self):
-        curPath = Path(__file__).parent.resolve()
-        filepath = self.receivedArray[0].decode('utf-8')
-        filepath = str(curPath) + '/' + filepath
-        del self.receivedArray[0]
-        verify = True
-        while verify:
-            if os.path.exists(filepath):
-                fileNum = str(self.fileNumber)
-                fileNum = "("+fileNum+")."
-                if self.fileNumber > 1:
-                    filepath = filepath.replace("("+str(self.fileNumber - 1)+").", fileNum)
-                    self.fileNumber += 1
-                else:
-                    filepath = filepath.replace(".", fileNum)
-                    self.fileNumber += 1
-
-
+    def sendPackage(self):
+        package = self.packages[self.cont-1]
+        totalPackages = self.numPackages.to_bytes(1,'big')
+        packageId = self.cont.to_bytes(1,'big')
+        packageSize = len(package)
+        packageSizeBytes = packageSize.to_bytes(1,'big')
+        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package)
+        print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
+        self.com1.sendData(txBuffer)
+    
+    def receiveResponse(self):
+        print("Esperando resposta do Server")
+        rxBuffer, nRx = self.com1.getData(14, msgType=self.msgType3, refFiveSec=self.refFiveSec, refTwentySec=self.refTwentySec)
+        print(f"Recebi a mensagem {rxBuffer}")
+        msgType = rxBuffer[0].to_bytes(1,'big')
+        eop = rxBuffer[10:14]
+        if msgType == self.msgType4 and eop == self.eop:
+            self.msgError = False
+            print(f"\nO server Falou que tudo estava ok com o pacote n°{self.cont}, seguindo para o próximo.")
+            self.cont += 1
+        elif msgType == self.msgType6 and eop == self.eop:
+            packageToResend = rxBuffer[6]
+            self.cont = packageToResend
+            self.msgError = True
+            print(f"\n\nRecebi mensagem de erro, re-enviando pacote defeituoso de n°{self.cont}.")
+        elif rxBuffer == b'\xFF':
+            self.fiveSecTimer = time.time() - self.refFiveSec
+            self.twentySecTimer = 20
+            print("Enviando mensagem de timeout para Server.")
+        elif rxBuffer == b'\x00':
+            self.fiveSecTimer = time.time() - self.refFiveSec
+            self.twentySecTimer = time.time() - self.refTwentySec
+            print("re-enviando mensagem.")
+        
+    def sendTimeoutMessage(self):
+        txBuffer = super().constructDatagram(self.msgType6, self.id, self.idServer)
+        self.com1.sendData(txBuffer)
                 
-            else:
-                verify = False
-        print(f'O novo arquivo será encontrado em: {filepath}')
-        newFile = open(filepath, 'wb')
-        for content in self.receivedArray:
-            newFile.write(content)
-        newFile.close()
-
+    def flushPortTX(self):
+        self.com1.tx.fisica.flush()
+        time.sleep(1)
+        self.com1.sendData(b'\x01')
+        time.sleep(1)
