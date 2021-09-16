@@ -11,6 +11,7 @@ from enlace import *
 import numpy as np
 import struct
 from fileManager import *
+sys.path.insert(1, os.path.realpath(os.path.pardir))
 from Protocolo import Protocolo
 
 class Client(Protocolo):
@@ -35,9 +36,14 @@ class Client(Protocolo):
         self.twentySecTimer = 0.0
 
     def mainLoop(self):
+        self.cleanLog()
         self.handShake()
+        self.com1.rx.clearBuffer()
         while self.cont <= self.numPackages:
             self.sendPackage()
+            if self.erro:
+                self.cont += 1
+                self.erro = False
             if (self.fiveSecTimer) < 5 or self.msgError:
                     self.refTwentySec = time.time()
             self.refFiveSec = time.time()        
@@ -54,13 +60,16 @@ class Client(Protocolo):
         print("Iniciando handShake.")
         while not self.inicia:
             txBuffer = super().constructDatagram(self.msgType1, self.id, self.idServer, id_do_arquivo=self.fileId)
+            txBufferLen = len(txBuffer).to_bytes(1,'big')
+            self.logger('env', self.msgType1, txBufferLen)
             self.com1.sendData(txBuffer)
             print("Esperando resposta do handshake.")
             rxBuffer, nRx = self.com1.getData(14, self.msgType1)
-            msgType = rxBuffer[0]
+            msgType = rxBuffer[0].to_bytes(1, 'big')
             eop = rxBuffer[10:14]
-            print(f"Recebi mensagem do tipo {type(msgType)}, eop {eop}")
-            if msgType.to_bytes(1, 'big') == self.msgType2 and eop == self.eop:
+            self.logger('rec', msgType, len(rxBuffer).to_bytes(1,'big'))
+            print(f"Recebi mensagem do tipo {msgType}, eop {eop}")
+            if msgType == self.msgType2 and eop == self.eop:
                 self.inicia = True
                 self.cont = 1
                 break
@@ -71,6 +80,7 @@ class Client(Protocolo):
         packageId = self.cont.to_bytes(1,'big')
         packageSize = len(package)
         packageSizeBytes = packageSize.to_bytes(1,'big')
+        self.logger('env', self.msgType3, packageSizeBytes, msgId=packageId, totalMsgs=totalPackages)
         txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package)
         print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
         self.com1.sendData(txBuffer)
@@ -81,6 +91,7 @@ class Client(Protocolo):
         print(f"Recebi a mensagem {rxBuffer}")
         msgType = rxBuffer[0].to_bytes(1,'big')
         eop = rxBuffer[10:14]
+        self.logger('rec', msgType, nRx.to_bytes(1, 'big'))
         if msgType == self.msgType4 and eop == self.eop:
             self.msgError = False
             print(f"\nO server Falou que tudo estava ok com o pacote n°{self.cont}, seguindo para o próximo.")
@@ -90,6 +101,9 @@ class Client(Protocolo):
             self.cont = packageToResend
             self.msgError = True
             print(f"\n\nRecebi mensagem de erro, re-enviando pacote defeituoso de n°{self.cont}.")
+        elif msgType == self.msgType5 and eop == self.eop:
+            print("Server me enviou mensagem de timeout.")
+            self.twentySecTimer = 20
         elif rxBuffer == b'\xFF':
             self.fiveSecTimer = time.time() - self.refFiveSec
             self.twentySecTimer = 20
@@ -101,6 +115,7 @@ class Client(Protocolo):
         
     def sendTimeoutMessage(self):
         txBuffer = super().constructDatagram(self.msgType6, self.id, self.idServer)
+        self.logger('env', self.msgType5, len(txBuffer).to_bytes(1,'big'))
         self.com1.sendData(txBuffer)
                 
     def flushPortTX(self):

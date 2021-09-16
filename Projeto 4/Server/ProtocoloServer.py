@@ -38,11 +38,13 @@ class Server(Protocolo):
     '''
 
     def logicaPrincipal(self):
+        self.cleanLog()
+
         print("Esperando Mensagem")
 
         ###################### ENTRA NO PRIMEIRO LOOP ######################
         ######################### ESTADO = OCIOSO ##########################
-        self.estadoOcioso()
+        checkResult = self.estadoOcioso()
 
         print("Na escuta!")
 
@@ -53,7 +55,7 @@ class Server(Protocolo):
         checkResult =  self.estadoPegandoPacotes()
         if checkResult=="SHUTDOWN":
             print(":-(")
-        else:
+        elif checkResult=="SUCCESS":
             print("SUCCESS!")
             
 
@@ -61,22 +63,37 @@ class Server(Protocolo):
 
     def estadoOcioso(self):
         ocioso = True
+        nMsgt1 = 0
         while ocioso:
-            
+
             msgt1, nMsgt1 = self.com1.getData(14)
-            id_do_servidor = msgt1[2].to_bytes(1, "big")
-            self.id_do_sensor = msgt1[1].to_bytes(1, "big")
-            tipo_da_mensagem = msgt1[0].to_bytes(1, "big")
-            
-            if id_do_servidor == self.id_do_server and tipo_da_mensagem == b'\x01':
-                print("Recebi uma mensagem para mim!")
-                ocioso = False
-                self.com1.rx.inOcioso = False
+
+            if nMsgt1 != 0:
+                id_do_servidor = msgt1[2].to_bytes(1, "big")
+                self.id_do_sensor = msgt1[1].to_bytes(1, "big")
+                tipo_da_mensagem = msgt1[0].to_bytes(1, "big")
+
+                self.logger("rec", tipo_da_mensagem, nMsgt1.to_bytes(1, "big"))
+
+                if tipo_da_mensagem == b'\x05':
+                    self.com1.disable()
+                    return "SHUTDOWN"
+                
+                if id_do_servidor == self.id_do_server and tipo_da_mensagem == b'\x01':
+                    print("Recebi uma mensagem para mim!")
+                    ocioso = False
+                
+            else:
+                self.logger("rec", b'\x00', b'\x00')
             
             time.sleep(1)
 
+
     def sendHandshake(self):
         txBuffer = self.constructDatagram(b'\x02', self.id_do_sensor, self.id_do_server)
+
+        self.logger("env", b'\x02', len(txBuffer).to_bytes(1, "big"))
+
         self.msgt2 = txBuffer
         self.com1.sendData(self.msgt2)
 
@@ -97,12 +114,29 @@ class Server(Protocolo):
                 bufferHead, nBufferHead = self.com1.getData(10)
 
                 if self.com1.rx.timer1>2:
-                    self.com1.sendData(self.msgt2)
+
+                    self.logger("rec", b'\x00', b'\x00')
+
+                    if previousId==0:
+                        self.com1.sendData(self.msgt2)
+
+                        self.logger("env", b'\x02', len(self.msgt2).to_bytes(1, "big"))
+
+                    else:
+                        txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
+
+                        self.logger("env", b'\x06', len(txBuffer).to_bytes(1, "big"))
+
+                        self.com1.sendData(txBuffer)
+
 
                 if self.com1.rx.timer2 > 20:
                     print("\nTimeout [2]: 20 segundos sem resposta.")
                     print("Desligando comunicação")
                     txBuffer = self.constructDatagram(b'\x05', self.id_do_sensor, self.id_do_server)
+
+                    self.logger("env", self.msgType5, len(txBuffer).to_bytes(1, "big"))
+
                     self.com1.sendData(txBuffer)
                     self.com1.disable()
                     return "SHUTDOWN"
@@ -112,6 +146,9 @@ class Server(Protocolo):
                     if tipo_da_mensagem == b'\x03':
                         self.com1.rx.timer1Bool = False
                         self.com1.rx.timer2Bool = True
+                    elif tipo_da_mensagem==b'\x05':
+                        self.com1.disable()
+                        return "SHUTDOWN"
                     
                     time.sleep(1)
 
@@ -131,16 +168,22 @@ class Server(Protocolo):
                 print("\nGetting EOP...")
                 bufferEOP, nBufferEOP = self.com1.getData(4)
 
+                mensagem_inteira = bufferHead+bufferPacote+bufferEOP
 
-                print(f'\nMensagem Inteira: {bufferHead+bufferPacote+bufferEOP}')
+                self.logger("rec", b'\x03', tamanho_pacote, id_pacote, pacotes_total)
+
+                print(f'\nMensagem Inteira: {mensagem_inteira}')
                 print(f'Contagem: {cont}, ID: {id_pacote}\n')
 
                 if bufferEOP == self.eop and int.from_bytes(id_pacote, "big") == cont:
                     print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
                     self.receivedArray.append(bufferPacote)
                     cont += 1
-                    previousId = id_pacote
+                    previousId = cont.to_bytes(1, "big")
                     txBuffer = self.constructDatagram(b'\x04', self.id_do_sensor, self.id_do_server, ultimo_pacote_recebido=id_pacote)
+
+                    self.logger("env", b'\x04', len(txBuffer).to_bytes(1, "big"))
+
                     self.com1.sendData(txBuffer)
                 else:
                     print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
@@ -148,6 +191,9 @@ class Server(Protocolo):
                         txBuffer = self.msgt2
                     else:
                         txBuffer = self.constructDatagram(b'\x06', self.id_do_sensor, self.id_do_server, pacote_recomeco=previousId)
+
+                    self.logger("env", txBuffer[0].to_bytes(1, "big"), len(txBuffer).to_bytes(1, "big"))
+
                     self.com1.sendData(txBuffer)
 
         self.com1.disable()
