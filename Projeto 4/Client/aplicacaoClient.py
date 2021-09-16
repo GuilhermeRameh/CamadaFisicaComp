@@ -19,31 +19,28 @@ from fileManager import *
 from ProtocoloClient import Client
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
-# serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
+serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-serialName = "COM3"                  # Windows(variacao de)
+#serialName = "COM3"                  # Windows(variacao de)
 
 
 def main():
     main = True
-    client = Client(serialName)
+    serverId = b'\x66'
+    fileId = b'\x01'
+    fm = FileManager("loss.bmp")
+    packages = fm.dividePackages()
+    client = Client(serialName, serverId, fileId, packages)
     retorno = []
 
-    while main:
-        try:
-            client.flushPortTX()
+    try:
+        client.mainLoop()
 
-            txBuffer = client.constructDatagram(b'\x01', b'\x01', b'\x01')
-            client.com1.sendData(txBuffer)
-            print(txBuffer)
-            main = False
-            client.com1.disable()
-
-        except Exception as erro:
-            print("ops! :-\\")
-            print(erro)
-            client.com1.disable()
-            main = False
+    except Exception as erro:
+        print("ops! :-\\")
+        print(erro)
+        client.com1.disable()
+        main = False
 
     #so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
 if __name__ == "__main__":
