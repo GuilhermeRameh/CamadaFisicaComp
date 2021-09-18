@@ -77,10 +77,12 @@ class Protocolo:
         newFile.close()
 
     def cleanLog(self):
-        fp = open('Projeto 4/Client/log.txt', 'w')
+        filepath = os.getcwd() + '/log.txt'
+        fp = open(filepath, 'w')
         fp.close()
 
-    def logger(self, sendReceive, msgType, totalBytes, msgId=None, totalMsgs=None, crc=''):
+    def logger(self, sendReceive, msgType, totalBytes, msgId=None, totalMsgs=None, crc=b''):
+        filepath = os.getcwd() + '/log.txt'
         currentTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         logData = currentTime
         msgTypeStr = str(int.from_bytes(msgType, 'big'))
@@ -90,12 +92,12 @@ class Protocolo:
             totalMsgsStr = str(int.from_bytes(totalMsgs, 'big'))
             crcStr = crc.decode('utf-8')
             logData += " / " + sendReceive + " / " + msgTypeStr + " / " + totalBytesStr + " / " + msgIdStr + " / " + totalMsgsStr + " / " + crcStr + '\n'
-            fp = open('Projeto 4/Client/log.txt', 'a')
+            fp = open(filepath, 'a')
             fp.write(logData)
             fp.close()
         else:
             logData += " / " + sendReceive + " / " + msgTypeStr + " / " + totalBytesStr + '\n'
-            fp = open('Projeto 4/Client/log.txt', 'a')
+            fp = open(filepath, 'a')
             fp.write(logData)
             fp.close()
 

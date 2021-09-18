@@ -83,9 +83,10 @@ class RX(object):
             refFiveSec = time.time()
             refTwentySec = time.time()
         while(self.getBufferLen() < size):
-            time.sleep(0.05)      
+            time.sleep(0.5)      
             runtimeFive = time.time() - refFiveSec
             runtimeTwenty = time.time() - refTwentySec
+            time.sleep(0.5)
             if runtimeFive >= 5:
                 print("\n\n\nPassaram-se 5 segundos sem receber uma resposta.")
                 return (b'\x00')
