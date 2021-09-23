@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from enlace import *
 import numpy as np
-import struct
+import binascii
 from fileManager import *
 sys.path.insert(1, os.path.realpath(os.path.pardir))
 from Protocolo import Protocolo
@@ -39,6 +39,8 @@ class Client(Protocolo):
         self.cleanLog()
         self.handShake()
         self.com1.rx.clearBuffer()
+        a = binascii.crc_hqx(self.packages[1], 0)
+        print(a)
         while self.cont <= self.numPackages:
             self.sendPackage()
             if self.erro:
