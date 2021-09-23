@@ -39,8 +39,6 @@ class Client(Protocolo):
         self.cleanLog()
         self.handShake()
         self.com1.rx.clearBuffer()
-        a = binascii.crc_hqx(self.packages[1], 0)
-        print(a)
         while self.cont <= self.numPackages:
             self.sendPackage()
             if self.erro:
@@ -78,13 +76,15 @@ class Client(Protocolo):
 
     def sendPackage(self):
         package = self.packages[self.cont-1]
+        crc = binascii.crc_hqx(package, 0).to_bytes(2,'big')
+        print(f"\nO CRC É: {binascii.hexlify(crc)}")
         totalPackages = self.numPackages.to_bytes(1,'big')
         packageId = self.cont.to_bytes(1,'big')
         packageSize = len(package)
         packageSizeBytes = packageSize.to_bytes(1,'big')
         self.logger('env', self.msgType3, packageSizeBytes, msgId=packageId, totalMsgs=totalPackages)
-        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package)
-        print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
+        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package, h8=crc[0].to_bytes(1, 'big'), h9=crc[1].to_bytes(1, 'big'))
+        print(f"\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
         self.com1.sendData(txBuffer)
     
     def receiveResponse(self):
@@ -122,7 +122,6 @@ class Client(Protocolo):
                 
     def flushPortTX(self):
         self.com1.tx.fisica.flush()
-        print("dei flush no bagulho")
         time.sleep(1)
         self.com1.sendData(b'\x01')
         time.sleep(1)

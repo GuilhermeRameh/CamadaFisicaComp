@@ -11,6 +11,7 @@
 
 
 from enlace import *
+import traceback
 import time
 import numpy as np
 from PIL import Image
@@ -26,20 +27,18 @@ serialName = "/dev/ttyACM1"           # Ubuntu (variacao de)
 
 def main():
     server = Server(serialName)
-    main = Server.main(Server)
     retorno = []
 
-    while main:
-        try:
-            server.flushPortTX()
+    
+    try:
+        server.logicaPrincipal()
+        server.reconstructMessage()
 
-            server.logicaPrincipal()   
-
-        except Exception as erro:
-            print("ops! :-\\")
-            print(erro)
-            server.com1.disable()
-            main = False
+    except Exception as erro:
+        print(traceback.format_exc())
+        print("ops! :-\\")
+        print(erro)
+        server.com1.disable()
 
     #so roda o main quando for executado do terminal ... se for chamado dentro de outro modulo nao roda
 if __name__ == "__main__":

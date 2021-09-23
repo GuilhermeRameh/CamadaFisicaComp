@@ -23,7 +23,6 @@ class RX(object):
         self.threadMutex = True
         self.READLEN     = 1024
 
-
         self.inOcioso = True
         self.timer1Bool = True
         self.timer2Bool = True
@@ -68,30 +67,27 @@ class RX(object):
         return(b)
 
     def getBuffer(self, nData):
-                   
+        self.threadPause()
+        b           = self.buffer[0:nData]
+        self.buffer = self.buffer[nData:]
+        self.threadResume()
+        return(b)
+
+
+    def getNData(self, size):
         startTime = time.time()
         if self.timer2Bool:
             self.timer2inicial = time.time()
             self.timer2Bool = False
         
-        while(self.getBufferLen() < nData):
+        while(self.getBufferLen() < size):
             time.sleep(0.05)
             self.timer1 = time.time() - startTime
             self.timer2 = time.time() - self.timer2inicial
-            if self.timer1>2 and not self.inOcioso:
+            if self.timer1>2:
                 print("Timeout [1]: Reiniciando recebimento de dados.")
                 return (b'')
         
-
-        self.threadPause()
-        b           = self.buffer[0:nData]
-        self.buffer = self.buffer[nData:]
-        self.threadResume()
-        self.timer1Bool = False
-        return(b)
-
-
-    def getNData(self, size):
         return(self.getBuffer(size))
      
 
