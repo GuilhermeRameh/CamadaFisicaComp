@@ -158,12 +158,17 @@ class Server(Protocolo):
                 pacotes_total = bufferHead[3].to_bytes(1, "big")
                 id_pacote = bufferHead[4].to_bytes(1, "big")
                 tamanho_pacote = bufferHead[5].to_bytes(1, "big")
+                crc = bufferHead[8:10]
 
                 print(f"\nID do pacote a receber: {int.from_bytes(id_pacote, byteorder='big')}")
                 print(f"Tamanho do pacote a receber: {int.from_bytes(tamanho_pacote, byteorder='big')}")
                 print("\nGetting Payload...")
 
                 bufferPacote, nPacoteBuffer = self.com1.getData(int.from_bytes(tamanho_pacote, "big"))
+
+                print("Calculando CRC...")
+                crc_server = self.CRC(bufferPacote)
+                print(f"CRC calculado: {crc_server}, CRC recebido:{crc}")
 
                 print("\nGetting EOP...")
                 bufferEOP, nBufferEOP = self.com1.getData(4)
@@ -175,8 +180,8 @@ class Server(Protocolo):
                 print(f'\nMensagem Inteira: {mensagem_inteira}')
                 print(f'Contagem: {cont}, ID: {id_pacote}\n')
 
-                if bufferEOP == self.eop and int.from_bytes(id_pacote, "big") == cont:
-                    print("EOP correto. ID do pacote correto. \nEnviando *msgt4* para confirmação de recebimento.")
+                if bufferEOP == self.eop and int.from_bytes(id_pacote, "big") == cont and crc == crc_server:
+                    print("EOP correto. ID do pacote correto. CRC correto!")
                     self.receivedArray.append(bufferPacote)
                     cont += 1
                     previousId = cont.to_bytes(1, "big")
@@ -184,9 +189,26 @@ class Server(Protocolo):
 
                     self.logger("env", b'\x04', len(txBuffer).to_bytes(1, "big"))
 
+                    print("\nEnviando \bmsgt4\b para confirmação de recebimento.")
                     self.com1.sendData(txBuffer)
+                    time.sleep(0.05)
+    
                 else:
-                    print("EOP incorreto ou ID do pacote incorreto. \nEnviando *msgt6* para reenvio de pacote.")
+                    print("\nERRO na confirmação do pacote:")
+                    if bufferEOP != self.eop:
+                        print("O EOP estava errado.")
+                        print(f"     Esperava {self.eop} mas recebeu {bufferEOP}")
+                    elif int.from_bytes(id_pacote, "big") != cont:
+                        print("O ID recebido estava errado.")
+                        id_recebido = int.from_bytes(id_pacote, "big")
+                        print(f"     Esperava {cont} mas recebeu {id_recebido}")
+                    elif crc != crc_server:
+                        print("A conta do CRC estava errada.")
+                        print(f"     Esperava {crc} mas calculou {crc_server}")
+                        
+
+
+
                     if previousId == 0:
                         txBuffer = self.msgt2
                     else:

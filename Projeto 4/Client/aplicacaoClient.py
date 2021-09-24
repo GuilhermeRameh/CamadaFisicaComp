@@ -19,16 +19,16 @@ from fileManager import *
 from ProtocoloClient import Client
 
 #use uma das 3 opcoes para atribuir à variável a porta usada
-serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
+# serialName = "/dev/ttyACM0"           # Ubuntu (variacao de)
 #serialName = "/dev/tty.usbmodem1411" # Mac    (variacao de)
-#serialName = "COM3"                  # Windows(variacao de)
+serialName = "COM3"                  # Windows(variacao de)
 
 
 def main():
     main = True
     serverId = b'\x66'
     fileId = b'\x01'
-    fm = FileManager("loss.bmp")
+    fm = FileManager("SANS.png")
     packages = fm.dividePackages()
     client = Client(serialName, serverId, fileId, packages)
     retorno = []
