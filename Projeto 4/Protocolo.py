@@ -11,6 +11,8 @@ from datetime import datetime
 import numpy as np
 import struct
 
+from crccheck.crc import Crc16
+
 class Protocolo:
 
     def __init__(self):
@@ -19,10 +21,6 @@ class Protocolo:
         self.payloadMaxSize = 114
 
         self.extension = ''
-
-        self.resendBit = b'\x01'
-        self.contBit = b'\x01'
-        self.endBit = b'\x01'
 
         self.msgType1 = b'\x01' 
         self.msgType2 = b'\x02'
@@ -34,9 +32,11 @@ class Protocolo:
         self.eop = b'\xFF\xAA\xFF\xAA'
 
         self.fileNumber = 1
-        self.erro = True
+        self.erroEOP = True
+        self.erroID = True
+        self.erroCRC = True
 
-    def constructDatagram(self, tipo_da_mensagem, id_do_sensor, id_do_servidor, pacotes_total=b'\x00', id_pacote=b'\x00', id_do_arquivo=b'\x00', tamanho_pacote=b'\x00', pacote_recomeco=b'\x00', ultimo_pacote_recebido=b'\x00', pacote=b'', h8=b'\x00', h9=b'\x00'):
+    def constructDatagram(self, tipo_da_mensagem, id_do_sensor, id_do_servidor, pacotes_total=b'\x00', id_pacote=b'\x00', id_do_arquivo=b'\x00', tamanho_pacote=b'\x00', pacote_recomeco=b'\x00', ultimo_pacote_recebido=b'\x00', pacote=b'', crc=b'\x00\x00'):
         ############### Monta Head #################
         
         if tipo_da_mensagem==b'\x01' or tipo_da_mensagem==b'\x02':
@@ -46,7 +46,7 @@ class Protocolo:
         else: 
             h5 = b'\x00'
 
-        head = b'' + tipo_da_mensagem + id_do_sensor + id_do_servidor + pacotes_total + id_pacote + h5 + pacote_recomeco + ultimo_pacote_recebido + h8 + h9
+        head = b'' + tipo_da_mensagem + id_do_sensor + id_do_servidor + pacotes_total + id_pacote + h5 + pacote_recomeco + ultimo_pacote_recebido + crc
 
         txBuffer = b'' + head + pacote + self.eop
 
@@ -101,4 +101,8 @@ class Protocolo:
             fp.write(logData)
             fp.close()
     
+    def CRC(self, data):
+        crc_result = Crc16.calc(data)
+        crc_bytes = crc_result.to_bytes(2, "big")
+        return crc_bytes
 

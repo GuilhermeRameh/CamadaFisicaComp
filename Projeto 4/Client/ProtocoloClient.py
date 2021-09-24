@@ -40,10 +40,20 @@ class Client(Protocolo):
         self.handShake()
         self.com1.rx.clearBuffer()
         while self.cont <= self.numPackages:
-            self.sendPackage()
-            if self.erro:
+            # NOTE: Essa sessão é para registrar os erros, e provocá-los para testar as funcionalidades do código
+            
+            if self.erroEOP and self.cont == 3:
+                self.eop = b"\x00\x00\x00\x00"
+                self.erroEOP = False
+            else:
+                self.eop = b"\xff\xaa\xff\xaa" #corrige o EOP após o erro intencional
+
+            if self.erroID and self.cont == 5:
                 self.cont += 1
-                self.erro = False
+                self.erroID = False
+            
+            self.sendPackage()
+
             if (self.fiveSecTimer) < 5 or self.msgError:
                     self.refTwentySec = time.time()
             self.refFiveSec = time.time()        
@@ -80,9 +90,16 @@ class Client(Protocolo):
         packageId = self.cont.to_bytes(1,'big')
         packageSize = len(package)
         packageSizeBytes = packageSize.to_bytes(1,'big')
+        crc = self.CRC(package)
+
+        if self.erroCRC and self.cont == 2:
+            crc = (6969).to_bytes(2, "big")
+            self.erroCRC = False
+
         self.logger('env', self.msgType3, packageSizeBytes, msgId=packageId, totalMsgs=totalPackages)
-        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package)
+        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, crc=crc, pacote=package)
         print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
+        print(f'CRC: {crc}')
         self.com1.sendData(txBuffer)
     
     def receiveResponse(self):
