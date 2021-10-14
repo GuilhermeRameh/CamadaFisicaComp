@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from enlace import *
 import numpy as np
-import struct
+import binascii
 from fileManager import *
 
 sys.path.insert(1, os.path.realpath(os.path.pardir))

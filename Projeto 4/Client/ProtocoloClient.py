@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from enlace import *
 import numpy as np
-import struct
+import binascii
 from fileManager import *
 sys.path.insert(1, os.path.realpath(os.path.pardir))
 from Protocolo import Protocolo
@@ -86,6 +86,8 @@ class Client(Protocolo):
 
     def sendPackage(self):
         package = self.packages[self.cont-1]
+        crc = binascii.crc_hqx(package, 0).to_bytes(2,'big')
+        print(f"\nO CRC É: {binascii.hexlify(crc)}")
         totalPackages = self.numPackages.to_bytes(1,'big')
         packageId = self.cont.to_bytes(1,'big')
         packageSize = len(package)
@@ -97,9 +99,14 @@ class Client(Protocolo):
             self.erroCRC = False
 
         self.logger('env', self.msgType3, packageSizeBytes, msgId=packageId, totalMsgs=totalPackages)
+<<<<<<< HEAD
         txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, crc=crc, pacote=package)
         print(f"\n\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
         print(f'CRC: {crc}')
+=======
+        txBuffer = super().constructDatagram(self.msgType3, self.id, self.idServer, pacotes_total=totalPackages, id_pacote=packageId, id_do_arquivo=self.fileId, tamanho_pacote=packageSizeBytes, pacote=package, h8=crc[0].to_bytes(1, 'big'), h9=crc[1].to_bytes(1, 'big'))
+        print(f"\nEnviando o Pacote n°{self.cont}, de tamanho: {packageSize}.")
+>>>>>>> bc99644d32a04bb20a8abb503f8796acde68361b
         self.com1.sendData(txBuffer)
     
     def receiveResponse(self):
