@@ -9,7 +9,7 @@ void setup() {
 
 void loop() {
  receive_byte();
- delay(5);
+ delay(500);
 }
 
 
