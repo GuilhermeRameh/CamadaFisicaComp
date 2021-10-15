@@ -30,6 +30,7 @@ void sw_uart_write_byte(due_sw_uart *uart, char data);
 
 void send_message(due_sw_uart *uart);
 void write_byte(due_sw_uart *uart, byte data);
+void charToBinaryArray(char c, uint8_t *binary_array);
 
 void _sw_uart_wait_half_T(due_sw_uart *uart);
 void _sw_uart_wait_T(due_sw_uart *uart);

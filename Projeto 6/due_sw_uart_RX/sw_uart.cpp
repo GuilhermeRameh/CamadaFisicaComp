@@ -11,9 +11,6 @@ void sw_uart_setup(due_sw_uart *uart, int rx, int stopbits, int databits, int pa
   
 }
 
-
-
-
 int calc_even_parity(char data) {
   int ones = 0;
 
@@ -31,7 +28,7 @@ int sw_uart_receive_byte(due_sw_uart *uart, char* data) {
     //Serial.println("esperando byte");
   }
 
-  Serial.println("\nchegou byte");
+  // Serial.println("\nchegou byte");
   // confirm start bit
   _sw_uart_wait_half_T(uart);
   // HIGH = invalid
@@ -44,9 +41,11 @@ int sw_uart_receive_byte(due_sw_uart *uart, char* data) {
   // start getting data 
   char aux = 0x00;
   for(int i = 0; i < uart->databits; i++) {
-    aux |= digitalRead(uart->pin_rx) << i;
+    // Serial.print(digitalRead(uart->pin_rx)); //01100001
+    aux |= digitalRead(uart->pin_rx) << i; // 10000110
     _sw_uart_wait_T(uart);
   }
+  // Serial.println("");
   
   // parity
   int rx_parity = 0;
@@ -69,6 +68,9 @@ int sw_uart_receive_byte(due_sw_uart *uart, char* data) {
   } else if(uart->paritybit == SW_UART_ODD_PARITY) {
      parity = !calc_even_parity(aux);
   }
+
+  // Serial.print("Parity: ");
+  // Serial.println(parity);
 
   if(parity != rx_parity) {
     return SW_UART_ERROR_PARITY;
