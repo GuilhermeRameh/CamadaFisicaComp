@@ -21,27 +21,18 @@ int calc_even_parity(char data) {
   return ones % 2;
 }
 
-void send_message(due_sw_uart *uart) {
+void send_one(due_sw_uart *uart, char letter) {
 
   digitalWrite(uart->pin_tx, LOW); // Start Bit
   _sw_uart_wait_T(uart);
-  char data = 'a';
-  uint8_t bin[8];
-
+  char data = letter;
   // Serial.print("Enviando: ");
   // Serial.println(data);
 
-  charToBinaryArray(data, bin);
-
   for(int i = 0; i < 8; i++){
     // Serial.print(bin[i]);
-    int this_bit = bin[i];
-    if(this_bit == 0){
-      digitalWrite(uart->pin_tx, LOW);
-    }
-    else{
-      digitalWrite(uart->pin_tx, HIGH);
-    }
+    int this_bit = (data>>i) & 0x01;
+    digitalWrite(uart->pin_tx, this_bit); // Sending individual bits
     _sw_uart_wait_T(uart);
   } 
   // Serial.println("");
@@ -56,22 +47,22 @@ void send_message(due_sw_uart *uart) {
   // Serial.print("Parity: ");
   // Serial.println(parity);
 
-  if(parity == 0){
-    digitalWrite(uart->pin_tx, LOW);
-  }
-  else{
-    digitalWrite(uart->pin_tx, HIGH);
-  }
+  digitalWrite(uart->pin_tx, parity); // Sending Parity
+  
   _sw_uart_wait_T(uart);
   digitalWrite(uart->pin_tx, HIGH); // End Bit
   _sw_uart_wait_T(uart);
 }
 
-void charToBinaryArray(char c, uint8_t *binary_array){
-  for(uint8_t i = 0; i < 8; i++) {
-    binary_array[i] = c & (1 << i);
+void send_phrase(due_sw_uart *uart){
+  char string[] = "oi Guilherme";
+  for (int i=0; i<strlen(string); i++){
+    send_one(uart, string[i]);
+    delay(10);
   }
+  exit(0);
 }
+
 
 // MCK 21MHz
 void _sw_uart_wait_half_T(due_sw_uart *uart) {

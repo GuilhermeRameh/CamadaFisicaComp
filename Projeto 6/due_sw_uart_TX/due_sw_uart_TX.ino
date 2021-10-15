@@ -11,6 +11,5 @@ void setup() {
 }
 
 void loop() {
-  send_message(&uart);
-  delay(2000);
+  send_phrase(&uart);
 }

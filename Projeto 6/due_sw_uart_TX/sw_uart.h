@@ -27,10 +27,10 @@ void sw_uart_write_data(due_sw_uart *uart, char* bufferData, int writeN);
 void sw_uart_write_string(due_sw_uart *uart, char* stringData);
 int  sw_uart_receive_byte(due_sw_uart *uart, char* data);
 void sw_uart_write_byte(due_sw_uart *uart, char data);
-
-void send_message(due_sw_uart *uart);
 void write_byte(due_sw_uart *uart, byte data);
-void charToBinaryArray(char c, uint8_t *binary_array);
+
+void send_one(due_sw_uart *uart, char *data);
+void send_phrase(due_sw_uart *uart);
 
 void _sw_uart_wait_half_T(due_sw_uart *uart);
 void _sw_uart_wait_T(due_sw_uart *uart);
