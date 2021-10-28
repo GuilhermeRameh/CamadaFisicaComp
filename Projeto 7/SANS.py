@@ -5,6 +5,8 @@ import numpy as np
 from scipy import signal
 from scipy.fftpack import fft, fftshift
 import sys
+
+import math
 #importe as bibliotecas
 
 
@@ -51,51 +53,57 @@ def main():
     T   = 1    # Tempo em que o seno será gerado
     t   = np.linspace(-T/2,T/2,T*fs)
 
-    x, y = bruh.generateSin(148.1,5,T,fs)
-    x, y2 = bruh.generateSin(296.2,5,T,fs)
-    x, y3 = bruh.generateSin(222.02,5,T,fs)
-    x, y4 = bruh.generateSin(209.48,5,T,fs)
-    x, y5 = bruh.generateSin(197.74,5,T,fs)
-    x, y6 = bruh.generateSin(176.22,5,T,fs)
+    x, y = bruh.generateSin(148.1,5*gainX,T,fs)
+    x, y2 = bruh.generateSin(296.2,5*gainX,T,fs)
+    x, y3 = bruh.generateSin(222.02,5*gainX,T,fs)
+    x, y4 = bruh.generateSin(209.48,5*gainX,T,fs)
+    x, y5 = bruh.generateSin(197.74,5*gainX,T,fs)
+    x, y6 = bruh.generateSin(176.22,5*gainX,T,fs)
     #printe a mensagem para o usuario teclar um numero de 0 a 9. 
     #nao aceite outro valor de entrada.
     NUM = 5
     print("Gerando Tom referente ao símbolo : {}".format(NUM))
     #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
 
-    list = [1, 1, 2, 3, 4, 5, 6, 1, 6, 5]
+    # list = [1, 1, 2, 3, 4, 5, 6, 1, 6, 5]
+    # list_2 = []
 
-    for i in list:
-        if i == 1:
-
-        elif i == 2:
-
-        elif i == 3:
-            
-
+    # for i in list:
+    #     if i == 1:
+    #         list_2.append(y[:(round(len(y)/8))])
+    #     elif i == 2:
+    #         list_2.append(y2[:(round(len(y)/8))])
+    #     elif i == 3:
+    #         list_2.append(y3[:(round(len(y)/8))])
+    #     elif i == 4:
+    #         list_2.append(y4[:(round(len(y)/8))])
+    #     elif i == 5:
+    #         list_2.append(y5[:(round(len(y)/8))])
+    #     elif i == 6:
+    #         list_2.append(y6[:(round(len(y)/8))])
     #printe o grafico no tempo do sinal a ser reproduzido
     # reproduz o som
 
-    # sd.play(y[:(round(len(y)/8))], fs)
-    # sd.wait(0.1)
-    # sd.play(y[:(round(len(y)/8))], fs)
-    # sd.wait(0.1)
-    # sd.play(y2[:(round(len(y)/4))], fs)
-    # sd.wait(0.1)
-    # sd.play(y3[:(round(len(y)*3/8))], fs)
-    # sd.wait(0.1)
-    # sd.play(y4[:(round(len(y)/4))], fs)
-    # sd.wait(0.1)
-    # sd.play(y5[:(round(len(y)/4))], fs)
-    # sd.wait(0.1)
-    # sd.play(y6[:(round(len(y)/4))], fs)
-    # sd.wait(0.1)
-    # sd.play(y[:(round(len(y)/8))], fs)
-    # sd.wait(0.1)
-    # sd.play(y6[:(round(len(y)/8))], fs)
-    # sd.wait(0.1)
-    # sd.play(y5[:(round(len(y)/8))], fs)
-    sd.play(list_2, fs)
+    sd.play(y[:(math.ceil(len(y)/8))], fs)
+    sd.wait(0.1)
+    sd.play(y[:(math.ceil(len(y)/8))], fs)
+    sd.wait(0.1)
+    sd.play(y2[:(math.ceil(len(y)/4))], fs)
+    sd.wait(0.1)
+    sd.play(y3[:(math.ceil(len(y)*3/8))], fs)
+    sd.wait(0.1)
+    sd.play(y4[:(math.ceil(len(y)/4))], fs)
+    sd.wait(0.1)
+    sd.play(y5[:(math.ceil(len(y)/4))], fs)
+    sd.wait(0.1)
+    sd.play(y6[:(math.ceil(len(y)/4))], fs)
+    sd.wait(0.1)
+    sd.play(y[:(math.ceil(len(y)/8))], fs)
+    sd.wait(0.1)
+    sd.play(y6[:(math.ceil(len(y)/8))], fs)
+    sd.wait(0.1)
+    sd.play(y5[:(math.ceil(len(y)/8))], fs)
+    
 
     # Exibe gráficos
     plt.show()

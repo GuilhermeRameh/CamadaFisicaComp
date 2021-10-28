@@ -8,11 +8,29 @@ from scipy import signal as window
 
 
 class signalMeu:
-    def __init__(self):
-        self.init = 0
 
     def __init__(self):
         self.init = 0
+        self.freq_list = [[697, 770, 852, 941], [1209, 1336, 1477, 1633]]
+        self.convertor = {
+            "1": [self.freq_list[0][0], self.freq_list[1][0]],
+            "2": [self.freq_list[0][0], self.freq_list[1][1]],
+            "3": [self.freq_list[0][0], self.freq_list[1][2]],
+            "A": [self.freq_list[0][0], self.freq_list[1][3]],
+            "4": [self.freq_list[0][1], self.freq_list[1][0]],
+            "5": [self.freq_list[0][1], self.freq_list[1][1]],
+            "6": [self.freq_list[0][1], self.freq_list[1][2]],
+            "B": [self.freq_list[0][1], self.freq_list[1][3]],
+            "7": [self.freq_list[0][2], self.freq_list[1][0]],
+            "8": [self.freq_list[0][2], self.freq_list[1][1]],
+            "9": [self.freq_list[0][2], self.freq_list[1][2]],
+            "C": [self.freq_list[0][2], self.freq_list[1][3]],
+            "X": [self.freq_list[0][3], self.freq_list[1][0]],
+            "0": [self.freq_list[0][3], self.freq_list[1][1]],
+            "#": [self.freq_list[0][3], self.freq_list[1][2]],
+            "D": [self.freq_list[0][3], self.freq_list[1][3]],
+        }
+        print(self.convertor["1"])
 
     def generateSin(self, freq, amplitude, time, fs):
         n = time*fs
