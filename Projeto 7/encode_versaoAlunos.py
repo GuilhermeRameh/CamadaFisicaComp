@@ -5,6 +5,7 @@ import numpy as np
 from scipy import signal
 from scipy.fftpack import fft, fftshift
 import sys
+import soundfile as sf
 
 #importe as bibliotecas
 
@@ -29,7 +30,7 @@ def main():
     #voce importou a bilioteca sounddevice como, por exemplo, sd. entao
     # os seguintes parametros devem ser setados:
 
-    fs = 44100   # taxqa de amostagem (sample rate)
+    fs = 44100   # taxa de amostagem (sample rate)
     sd.default.samplerate = fs
     sd.default.channels = 1  # pontos por segundo (frequência de amostragem)
     A   = 1.5   # Amplitude
@@ -58,21 +59,26 @@ def main():
     x2, y2 = signal.generateSin(list_freq[1], A*gainX, T, fs)
 
     tone = y1+y2
-
     #printe a mensagem para o usuario teclar um numero de 0 a 9. 
     #nao aceite outro valor de entrada.
     print("Gerando Tom referente ao símbolo : {}".format(NUM))
 
     #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
-    
+        
     plt.figure()
     l = [0,0.01,-1, 1]
     plt.axis(l)
     plt.plot(x1, tone, '.-')
 
+    X, Y = signal.calcFFT(tone,fs)
+    plt.figure()
+    plt.stem(X,np.abs(Y))
+    plt.xlim(600, 1700)
+
     #printe o grafico no tempo do sinal a ser reproduzido
     # reproduz o som
     sd.play(tone, fs)
+    sf.write('freqSave.wav', tone, fs, format='wav')
     # Exibe gráficos
     plt.show()
     # aguarda fim do audio
