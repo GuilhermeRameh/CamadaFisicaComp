@@ -30,7 +30,6 @@ class signalMeu:
             "#": [self.freq_list[0][3], self.freq_list[1][2]],
             "D": [self.freq_list[0][3], self.freq_list[1][3]],
         }
-        print(self.convertor["1"])
 
     def generateSin(self, freq, amplitude, time, fs):
         n = time*fs
