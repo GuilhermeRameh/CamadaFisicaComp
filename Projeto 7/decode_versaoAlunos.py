@@ -31,7 +31,7 @@ def main():
     
     sd.default.samplerate = fs #taxa de amostragem
     sd.default.channels = 1  #voce pode ter que alterar isso dependendo da sua placa
-    duration = 1 #tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
+    duration = 2 #tempo em segundos que ira aquisitar o sinal acustico captado pelo mic
 
 
     # faca um printo na tela dizendo que a captacao comecará em n segundos. e entao 
@@ -53,26 +53,30 @@ def main():
     #analise sua variavel "audio". pode ser um vetor com 1 ou 2 colunas, lista ...
     print(len(audio))
     #grave uma variavel com apenas a parte que interessa (dados)
-    
+    dados = []
+    for i in audio:
+        for j in i:
+            dados.append(j)
 
     # use a funcao linspace e crie o vetor tempo. Um instante correspondente a cada amostra!
     inicio = 0
     fim  = 1
-    numPontos = 44100
+    numPontos = 44100 *duration
     t = np.linspace(inicio,fim,numPontos)
-    print(t)
-    plt.figure("Fourier Audio")
-    plt.plot(t, audio)
 
     # plot do grafico  áudio vs tempo!
-   
+    plt.figure("Audio")
+    plt.plot(t, dados)   
     
     ## Calcula e exibe o Fourier do sinal audio. como saida tem-se a amplitude e as frequencias
-    # xf, yf = signal.calcFFT(y, fs)
-    # plt.figure("F(y)")
-    # plt.plot(xf,yf)
-    # plt.grid()
-    # plt.title('Fourier audio')
+    xf, yf = signal.calcFFT(dados, fs)
+    print(yf)
+    print(len(yf))
+    plt.figure("F(y)")
+    plt.plot(xf,np.abs(yf))
+    plt.xlim(0, 1800)
+    plt.grid()
+    plt.title('Fourier audio')
     
 
     #esta funcao analisa o fourier e encontra os picos
@@ -80,13 +84,30 @@ def main():
     #voce deve tambem evitar que dois picos proximos sejam identificados, pois pequenas variacoes na
     #frequencia do sinal podem gerar mais de um pico, e na verdade tempos apenas 1.
    
-    #index = peakutils.indexes(,,)
-    
+    index = peakutils.indexes(np.abs(yf), thres=0.1, min_dist=40)
+
     #printe os picos encontrados! 
-    
+    print("index de picos {}" .format(index))
+    frequencia_num = []
+    for freq in xf[index]:
+        if freq > 600:
+            print("freq de pico sao {}" .format(freq))
+            frequencia_num.append(freq)
     #encontre na tabela duas frequencias proximas às frequencias de pico encontradas e descubra qual foi a tecla
     #print a tecla.
-    
+    for key,values in signal.convertor.items():
+        freq1Achada = False
+        freq2Achada = False
+        for freq in frequencia_num:
+            dif1 = values[0] - freq
+            dif2 = values[1] - freq
+            if abs(dif1) < 2:
+                freq1Achada = True
+            elif abs(dif2) < 2:
+                freq2Achada = True
+        if freq1Achada and freq2Achada:
+            print(f"O número é {key}")
+            break
   
     ## Exibe gráficos
     plt.show()
