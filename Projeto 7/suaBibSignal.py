@@ -30,7 +30,7 @@ class signalMeu:
             "#": [self.freq_list[0][3], self.freq_list[1][2]],
             "D": [self.freq_list[0][3], self.freq_list[1][3]],
         }
-
+#
     def generateSin(self, freq, amplitude, time, fs):
         n = time*fs
         x = np.linspace(0.0, time, n)

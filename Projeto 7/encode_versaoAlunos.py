@@ -2,6 +2,7 @@ from suaBibSignal import *
 import matplotlib.pyplot as plt
 import sounddevice as sd
 import numpy as np
+from scipy.io import wavfile
 from scipy import signal
 from scipy.fftpack import fft, fftshift
 import sys
@@ -45,44 +46,61 @@ def main():
     gainX  = 0.3
     gainY  = 0.3
 
+    dict_tons = {}
+
+    for key in signal.convertor.keys():
+        freqs = signal.convertor[key]
+        # char = signal.convertor[]
+
+        x1, y1 = signal.generateSin(freqs[0], A*gainX, T, fs)
+        x2, y2 = signal.generateSin(freqs[1], A*gainX, T, fs)
+
+        tone = y1+y2
+
+        dict_tons[key] = tone
 
     print("Gerando Tons base")
-    NUM = input("Digite caracter:")
-    #gere duas senoides para cada frequencia da tabela DTMF ! Canal x e canal y 
-    #use para isso sua biblioteca (cedida)
-    #obtenha o vetor tempo tb.
-    #deixe tudo como array
 
-    list_freq = signal.convertor[NUM]
+    while True:
+        try:
+            NUM = input("Digite caracter:")
+            #gere duas senoides para cada frequencia da tabela DTMF ! Canal x e canal y 
+            #use para isso sua biblioteca (cedida)
+            #obtenha o vetor tempo tb.
+            #deixe tudo como array
 
-    x1, y1 = signal.generateSin(list_freq[0], A*gainX, T, fs)
-    x2, y2 = signal.generateSin(list_freq[1], A*gainX, T, fs)
+            plt.close('all')
+            tone = dict_tons[NUM]
 
-    tone = y1+y2
-    #printe a mensagem para o usuario teclar um numero de 0 a 9. 
-    #nao aceite outro valor de entrada.
-    print("Gerando Tom referente ao símbolo : {}".format(NUM))
+            #printe a mensagem para o usuario teclar um numero de 0 a 9. 
+            #nao aceite outro valor de entrada.
+            print("Gerando Tom referente ao símbolo : {}".format(NUM))
 
-    #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
-        
-    plt.figure()
-    l = [0,0.01,-1, 1]
-    plt.axis(l)
-    plt.plot(x1, tone, '.-')
+            #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
+                
+            plt.figure()
+            l = [0,0.01,-1, 1]
+            plt.axis(l)
+            plt.plot(x1, tone, '.-')
 
-    X, Y = signal.calcFFT(tone,fs)
-    plt.figure()
-    plt.stem(X,np.abs(Y))
-    plt.xlim(600, 1700)
+            X, Y = signal.calcFFT(tone,fs)
+            plt.figure()
+            plt.stem(X,np.abs(Y))
+            plt.xlim(600, 1700)
 
-    #printe o grafico no tempo do sinal a ser reproduzido
-    # reproduz o som
-    sd.play(tone, fs)
-    sf.write('freqSave.wav', tone, fs, format='wav')
-    # Exibe gráficos
-    plt.show()
-    # aguarda fim do audio
-    sd.wait()
+            #printe o grafico no tempo do sinal a ser reproduzido
+            # reproduz o som
+            sd.play(tone, fs)
+            sf.write(f'4 Semestre\Camada Física da computação\CamadaFisicaComp\Projeto 7\GravacoesGeradas/freqNbr{NUM}.wav', tone, fs)
+            # Exibe gráficos
+            plt.show(block=False)
+            # aguarda fim do audio
+            sd.wait()
+            
+
+        except KeyboardInterrupt:
+            print(KeyboardInterrupt)
+
 
 if __name__ == "__main__":
     main()
