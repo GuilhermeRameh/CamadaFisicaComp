@@ -49,15 +49,18 @@ def main():
     dict_tons = {}
 
     for key in signal.convertor.keys():
-        freqs = signal.convertor[key]
-        # char = signal.convertor[]
+        if key != "SANS":
+            freqs = signal.convertor[key]
+            # char = signal.convertor[]
 
-        x1, y1 = signal.generateSin(freqs[0], A*gainX, T, fs)
-        x2, y2 = signal.generateSin(freqs[1], A*gainX, T, fs)
+            x1, y1 = signal.generateSin(freqs[0], A*gainX, T, fs)
+            x2, y2 = signal.generateSin(freqs[1], A*gainX, T, fs)
 
-        tone = y1+y2
+            tone = y1+y2
 
-        dict_tons[key] = tone
+            dict_tons[key] = tone
+        else:
+            dict_tons[key] = signal.convertor[key]
 
     print("Gerando Tons base")
 
@@ -77,16 +80,17 @@ def main():
             print("Gerando Tom referente ao símbolo : {}".format(NUM))
 
             #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
-                
-            plt.figure()
-            l = [0,0.01,-1, 1]
-            plt.axis(l)
-            plt.plot(x1, tone, '.-')
+            
+            if NUM != "SANS":
+                plt.figure()
+                l = [0,0.01,-1, 1]
+                plt.axis(l)
+                plt.plot(x1, tone, '.-')
 
-            X, Y = signal.calcFFT(tone,fs)
-            plt.figure()
-            plt.stem(X,np.abs(Y))
-            plt.xlim(600, 1700)
+                X, Y = signal.calcFFT(tone,fs)
+                plt.figure()
+                plt.stem(X,np.abs(Y))
+                plt.xlim(600, 1700)
 
             #printe o grafico no tempo do sinal a ser reproduzido
             # reproduz o som

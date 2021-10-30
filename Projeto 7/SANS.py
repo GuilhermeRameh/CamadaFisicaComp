@@ -21,7 +21,7 @@ def todB(s):
     sdB = 10*np.log10(s)
     return(sdB)
 
-def main():
+def sans():
     print("Inicializando encoder")
     
      #declare um objeto da classe da sua biblioteca de apoio (cedida)    
@@ -65,50 +65,68 @@ def main():
     print("Gerando Tom referente ao símbolo : {}".format(NUM))
     #construa o sunal a ser reproduzido. nao se esqueca de que é a soma das senoides
 
-    # list = [1, 1, 2, 3, 4, 5, 6, 1, 6, 5]
-    # list_2 = []
+    list = [1, 1, 2, 3, 4, 5, 6, 1, 6, 5]
+    list_2 = []
 
-    # for i in list:
-    #     if i == 1:
-    #         list_2.append(y[:(round(len(y)/8))])
-    #     elif i == 2:
-    #         list_2.append(y2[:(round(len(y)/8))])
-    #     elif i == 3:
-    #         list_2.append(y3[:(round(len(y)/8))])
-    #     elif i == 4:
-    #         list_2.append(y4[:(round(len(y)/8))])
-    #     elif i == 5:
-    #         list_2.append(y5[:(round(len(y)/8))])
-    #     elif i == 6:
-    #         list_2.append(y6[:(round(len(y)/8))])
+    for j in range(len(list)):
+        i = list[j]
+        if i == 1:
+            list_2.append(y[:(round(len(y)/8))])
+        elif i == 2:
+            if j == 2:
+                list_2.append(y2[:(round(len(y)/4))])
+            else:
+                list_2.append(y2[:(round(len(y)/8))])
+        elif i == 3:
+            list_2.append(y3[:(round(len(y)*3/8))])
+        elif i == 4:
+            if j == 4:
+                list_2.append(y4[:(round(len(y)/4))])
+            else:
+                list_2.append(y4[:(round(len(y)/8))])
+        elif i == 5:
+            if j == 5:
+                list_2.append(y5[:(round(len(y)/4))])
+            else:
+                list_2.append(y5[:(round(len(y)/8))])
+        elif i == 6:
+            if j == 6:
+                list_2.append(y6[:(round(len(y)/4))])
+            else:
+                list_2.append(y6[:(round(len(y)/8))])
     #printe o grafico no tempo do sinal a ser reproduzido
     # reproduz o som
 
-    sd.play(y[:(math.ceil(len(y)/8))], fs)
-    sd.wait(0.1)
-    sd.play(y[:(math.ceil(len(y)/8))], fs)
-    sd.wait(0.1)
-    sd.play(y2[:(math.ceil(len(y)/4))], fs)
-    sd.wait(0.1)
-    sd.play(y3[:(math.ceil(len(y)*3/8))], fs)
-    sd.wait(0.1)
-    sd.play(y4[:(math.ceil(len(y)/4))], fs)
-    sd.wait(0.1)
-    sd.play(y5[:(math.ceil(len(y)/4))], fs)
-    sd.wait(0.1)
-    sd.play(y6[:(math.ceil(len(y)/4))], fs)
-    sd.wait(0.1)
-    sd.play(y[:(math.ceil(len(y)/8))], fs)
-    sd.wait(0.1)
-    sd.play(y6[:(math.ceil(len(y)/8))], fs)
-    sd.wait(0.1)
-    sd.play(y5[:(math.ceil(len(y)/8))], fs)
-    
+    flat_list = [item for sublist in list_2 for item in sublist]
 
-    # Exibe gráficos
-    plt.show()
-    # aguarda fim do audio
-    sd.wait()
+    return flat_list
+
+    # sd.play(y[:(math.ceil(len(y)/8))], fs)
+    # sd.wait()
+    # sd.play(y[:(math.ceil(len(y)/8))], fs)
+    # sd.wait()
+    # sd.play(y2[:(math.ceil(len(y)/4))], fs)
+    # sd.wait()
+    # sd.play(y3[:(math.ceil(len(y)*3/8))], fs)
+    # sd.wait()
+    # sd.play(y4[:(math.ceil(len(y)/4))], fs)
+    # sd.wait()
+    # sd.play(y5[:(math.ceil(len(y)/4))], fs)
+    # sd.wait()
+    # sd.play(y6[:(math.ceil(len(y)/4))], fs)
+    # sd.wait()
+    # sd.play(y[:(math.ceil(len(y)/8))], fs)
+    # sd.wait()
+    # sd.play(y6[:(math.ceil(len(y)/8))], fs)
+    # sd.wait()
+    # sd.play(y5[:(math.ceil(len(y)/8))], fs)
+    
+    # sd.play(flat_list, fs)
+    # # Exibe gráficos
+    # plt.show()
+    # # aguarda fim do audio
+    # sd.wait()
+
 
 if __name__ == "__main__":
     main()
