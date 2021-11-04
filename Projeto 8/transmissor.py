@@ -36,6 +36,6 @@ x, y = signal.generateSin(freqC, A*gain, T, fs)
 signalC = y[:len(filtered_audio)]
 
 AM_audio = abs(1+filtered_audio)*signalC
-
+input('Continue to transmission?')
 sd.play(AM_audio, fs)
 sd.wait()
