@@ -39,3 +39,5 @@ AM_audio = abs(1+filtered_audio)*signalC
 input('Continue to transmission?')
 sd.play(AM_audio, fs)
 sd.wait()
+
+sf.write("modulado.wav", AM_audio, fs)
